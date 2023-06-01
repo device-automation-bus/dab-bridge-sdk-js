@@ -1,0 +1,31 @@
+{
+  "name": "dab-rdk-bridge-js",
+  "version": "1.0.0",
+  "description": "Enables compatibility of multiple devices based on Reference Design Kit (RDK) with DAB (get-dab.com) through a network",
+  "main": "bridge.js",
+  "scripts": {
+    "build": "npm run build:emulator && npm run build:rdk",
+    "build:emulator": "TARGET_ENV=emulator node build.js",
+    "build:rdk": "TARGET_ENV=rdk node build.js",
+    "test": "jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@gitlab.collabora.com:denis.shimizu/dab-rdk-bridge-js.git"
+  },
+  "author": "Denis Shimizu",
+  "license": "MIT",
+  "dependencies": {
+    "ajv": "^8.12.0",
+    "commander": "^10.0.0",
+    "ip": "^1.1.8",
+    "mqtt": "^4.3.7",
+    "os": "^0.1.2",
+    "sync-request": "^6.1.0"
+  },
+  "devDependencies": {
+    "app-root-path": "^3.1.0",
+    "jest": "^29.5.0",
+    "prettier": "2.8.4"
+  }
+}
