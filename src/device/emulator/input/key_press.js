@@ -1,4 +1,4 @@
-async function process (requestParams){
+async function process (keyPressRequest){
 	// Response templates
 	
 KeyPressResponse = { status : 200 }

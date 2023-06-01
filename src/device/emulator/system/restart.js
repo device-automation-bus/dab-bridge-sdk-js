@@ -1,4 +1,4 @@
-async function process (requestParams){
+async function process (restartRequest){
 	// Response templates
 	
 RestartResponse = { status : 200 }

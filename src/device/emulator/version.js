@@ -1,4 +1,4 @@
-async function process (requestParams){
+async function process (versionRequest){
 	// Response templates
 	
 	Version = {

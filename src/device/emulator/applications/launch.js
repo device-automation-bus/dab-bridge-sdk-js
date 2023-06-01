@@ -1,4 +1,4 @@
-async function process (requestParams){
+async function process (launchApplicationRequest){
 	// Response templates
 	
 LaunchApplicationResponse = { status : 200 }

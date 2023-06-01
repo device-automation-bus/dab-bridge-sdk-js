@@ -1,4 +1,4 @@
-async function process (requestParams){
+async function process (deviceInfoRequest){
 	// Response templates
 	
 	enum NetworkInterfaceType{

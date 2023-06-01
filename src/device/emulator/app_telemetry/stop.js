@@ -1,4 +1,4 @@
-async function process (requestParams){
+async function process (stopDeviceTelemetryRequest){
 	// Response templates
 	
 StopApplicationTelemetryResponse = { status : 200 }

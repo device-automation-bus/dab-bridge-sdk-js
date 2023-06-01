@@ -1,4 +1,4 @@
-async function process (requestParams){
+async function process (exitApplicationRequest){
 	// Response templates
 	
 	ExitApplicationResponse = {

@@ -1,4 +1,4 @@
-async function process (requestParams){
+async function process (sendTextRequest){
 	// Response templates
 	
 VoiceTextRequestResponse = { status : 200 }

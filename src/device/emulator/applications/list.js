@@ -1,4 +1,4 @@
-async function process (requestParams){
+async function process (applicationListRequest){
 	// Response templates
 	
 	interface Application {
