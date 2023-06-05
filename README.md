@@ -24,7 +24,7 @@ The partner specific implementation component is located under `src/device`. A s
 3. Navigate to `src/device`
 4. Make a copy of the `template` folder and name it the manufactuer name for your devices.
 5. Implement each DAB operation within each file as per the specfication. Input parsing and output delivery is already handled by the bridge.
-6. Run the DAB Bridge with your device target implementation using `node index.js -t <manufacturer-name> -i <bridge-name> -b <mqtt-broker-ip>`
+6. Run the DAB Bridge with your device target implementation using `node src/index.js -t <manufacturer-name> -i <bridge-name> -b <mqtt-broker-ip>`
 7. Onboard your real device using the device management operations specified below and begin using DAB operations.
 
 Run sanity unit tests using `npm run test`, and use the Compliance Suite tool to run tests end-to-end with the device.
