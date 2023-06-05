@@ -52,21 +52,31 @@ function main() {
   this.mqttClient.subscribe("dab/#", { qos: 1 });
   // Handle incoming messages
   this.mqttClient.on("message", async (topic, message, packet) => {
+    console.log("\nReceived MQTT Message:");
+    console.log(`Topic: ${topic}`);
+    console.log(`Message: ${JSON.stringify(message)}`);
+    console.log(`Packet: ${JSON.stringify(packet)}`);
     // Process the incoming message and wait for the response
     response = await bridge.processMqttMessage(topic, message);
 
     // If there is a response, publish it
-    if (response !== 0) {
+    if (response.length !== 0) {
       // Get ResponseTopic property
       const responseTopic = packet.properties.responseTopic;
       // Get correlationData property
       const correlationData = packet.properties.correlationData;
-      // Publish the response
-      this.mqttClient.publish(
-        responseTopic,
-        JSON.stringify(response),
-        JSON.stringify({ properties: { correlationData } })
-      );
+      for (responseIndex in response) {
+        // Publish the response
+        console.log("\nPublishing Response:");
+        console.log(`Topic: ${JSON.stringify(responseTopic)}`);
+        console.log(`Message: ${JSON.stringify(response[responseIndex])}`);
+        console.log(`Correlation Data: ${JSON.stringify({ properties: { correlationData }})}`);
+        this.mqttClient.publish(
+          responseTopic,
+          JSON.stringify(response[responseIndex]),
+          JSON.stringify({ properties: { correlationData } })
+        );
+      }
     }
   });
 

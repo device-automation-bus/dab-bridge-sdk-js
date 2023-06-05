@@ -32,27 +32,27 @@ class dabBridge {
             let newDeviceID = "device" + this.deviceCounter;
             this.deviceCounter++;
             this.deviceTable.addDevice(newDeviceID, params.ip);
-            return '{"status":200, "deviceID":"' + newDeviceID + '"}';
+            return [{"status":200, "deviceID":`${newDeviceID}`}];
           } else {
-            return '{"status":500, "error":"IP already added"}';
+            return [{"status":500, "error":"IP already added"}];
           }
         } else if (brigeOperation == "remove-device") {
           // Implements dab/bridge/<bridgeID>/remove-device operation
           if (!this.deviceTable.isIpAdded(params.ip)) {
-            return '{"status":501, "error":"The requested functionality is not implemented."}';
+            return [{"status":501, "error":"The requested functionality is not implemented."}];
           } else {
             this.deviceTable.removeDevice("dummyDeviceID");
-            return '{"status":200}';
+            return [{"status":200}];
           }
         } else if (brigeOperation == "list-devices") {
           // Implements dab/bridge/<bridgeID>/list-devices operation
-          return (
+          return ([
             '{"status":200, "devices":' +
             JSON.stringify(this.deviceTable.getAllDevices()) +
             "}"
-          );
+          ]);
         } else {
-          return '{"status":501, "error":"The requested functionality is not implemented."}';
+          return [{"status":501, "error":"The requested functionality is not implemented."}];
         }
       }
     } else {

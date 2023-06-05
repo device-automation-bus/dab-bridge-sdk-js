@@ -7,10 +7,10 @@ async function process(ExitApplicationRequest) {
 
   // Enhance the sample response provided below with additional parameters as specified in
   // the ExitApplicationResponse structure within the DAB spec.
-  return {
+  return [{
     status: 501,
     error: "The requested functionality is not implemented.",
-  };
+  }];
 }
 
 module.exports = process;
