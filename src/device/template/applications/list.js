@@ -1,6 +1,6 @@
 // ListApplicationsRequest = {
 // }
-async function process(deviceId, ListApplicationsRequest) {
+async function process(deviceIp, ListApplicationsRequest) {
   // Implement the operation to list the applications installed on your device.
   // Also change the status code of the response accordingly.
 

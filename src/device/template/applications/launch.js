@@ -1,7 +1,7 @@
 // LaunchApplicationRequest = {
 // appId: "appId emulator example",
 // }
-async function process(deviceId, LaunchApplicationRequest) {
+async function process(deviceIp, LaunchApplicationRequest) {
   // Implement the operation to launch the application identified by appId.
   // Also change the status code of the response accordingly.
 

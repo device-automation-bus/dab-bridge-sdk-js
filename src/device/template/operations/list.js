@@ -1,6 +1,6 @@
 // ListSupportedOperationRequest = {
 // }
-async function process(deviceId, ListSupportedOperationRequest) {
+async function process(deviceIp, ListSupportedOperationRequest) {
   // Implement an operation to get the list of supported DAB operations on the device.
 
   // Enhance the sample response provided below with additional parameters as specified in

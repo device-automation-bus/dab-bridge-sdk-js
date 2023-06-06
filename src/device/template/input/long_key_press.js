@@ -2,7 +2,7 @@
 // keyCode: "keyCode emulator example",
 // durationMs: 0,
 // }
-async function process(deviceId, SendLongKeyPressRequest) {
+async function process(deviceIp, SendLongKeyPressRequest) {
   // Implement an operation to send a long key press for a specific key to the device.
 
   // Enhance the sample response provided below with additional parameters as specified in

@@ -1,6 +1,6 @@
 // StopDeviceTelemetryRequest = {
 // }
-async function process(deviceId, StopDeviceTelemetryRequest) {
+async function process(deviceIp, StopDeviceTelemetryRequest) {
   // Implement the disablement of device level telemetry collection for your device
   // and change the status code of the response accordingly.
 

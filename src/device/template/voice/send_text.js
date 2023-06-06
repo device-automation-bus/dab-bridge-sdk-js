@@ -2,7 +2,7 @@
 // requestText: "requestText emulator example",
 // voiceSystem: "voice assistant to be used",
 // }
-async function process(deviceId, SendVoiceAsTextRequest) {
+async function process(deviceIp, SendVoiceAsTextRequest) {
   // Implement an operation to send a text string through the voice assistant system as a user voice input.
 
   // Enhance the sample response provided below with additional parameters as specified in

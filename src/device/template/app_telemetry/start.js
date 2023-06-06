@@ -2,7 +2,7 @@
 // appId: "appId emulator example",
 // frequency: 0,
 // }
-async function process(deviceId, StartApplicationTelemetryRequest) {
+async function process(deviceIp, StartApplicationTelemetryRequest) {
   // Implement the enablement of application level telemetry collection for your device
   // for the app identified by appId and change the status code of the response accordingly.
 

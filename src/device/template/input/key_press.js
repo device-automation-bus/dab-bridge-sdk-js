@@ -1,7 +1,7 @@
 // SendKeyPressRequest = {
 // keyCode: "keyCode emulator example",
 // }
-async function process(deviceId, SendKeyPressRequest) {
+async function process(deviceIp, SendKeyPressRequest) {
   // Implement an operation to send a specific key to the device.
 
   // Enhance the sample response provided below with additional parameters as specified in

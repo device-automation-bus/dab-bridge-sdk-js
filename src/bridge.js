@@ -65,14 +65,14 @@ class dabBridge {
       if (this.deviceTable.isDeviceAdded(deviceId)) {
         // Get the operation from the topic
         dabOperation = topicStructure.slice(2, topicStructure.length).join("/");
-        return await this.processDabOperation(deviceId, dabOperation, params);
+        return await this.processDabOperation(this.deviceTable.getIp(deviceId), dabOperation, params);
       }
     }
 
     return 0;
   }
 
-  async processDabOperation(deviceId, dabOperation, params) {
+  async processDabOperation(deviceIp, dabOperation, params) {
     let structMap = require("./structsMap.js");
     let structFile = structMap[dabOperation];
     let dabStruct = require(structFile);
@@ -90,7 +90,7 @@ class dabBridge {
     const functionPath =
       "./device/" + this.target + "/" + functionMap[dabOperation];
     const functionProcess = require(functionPath);
-    response = await functionProcess(deviceId, params);
+    response = await functionProcess(deviceIp, params);
     return response;
   }
 }
