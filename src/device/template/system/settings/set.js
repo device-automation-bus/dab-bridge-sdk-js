@@ -1,7 +1,7 @@
 // SetSystemSettingsRequest = {
 // language: String,
 // }
-async function process(SetSystemSettingsRequest) {
+async function process(deviceId, SetSystemSettingsRequest) {
   // Implement an operation to set a specific system setting to the requested value on the device.
 
   // Enhance the sample response provided below with additional parameters as specified in

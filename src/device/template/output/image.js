@@ -1,6 +1,6 @@
 // CaptureScreenshotRequest = {
 // }
-async function process(CaptureScreenshotRequest) {
+async function process(deviceId, CaptureScreenshotRequest) {
   // Implement an operation to capture and send the screenshot of the current frame displayed on the device.
 
   // Enhance the sample response provided below with additional parameters as specified in

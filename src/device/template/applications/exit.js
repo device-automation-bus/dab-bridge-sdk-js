@@ -1,7 +1,7 @@
 // ExitApplicationRequest = {
 // appId: "appId emulator example",
 // }
-async function process(ExitApplicationRequest) {
+async function process(deviceId, ExitApplicationRequest) {
   // Implement the application exit operation for your device for the app identified
   // by appId and change the status code of the response accordingly.
 

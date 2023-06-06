@@ -1,6 +1,6 @@
 // GetDeviceInformationRequest = {
 // }
-async function process(GetDeviceInformationRequest) {
+async function process(deviceId, GetDeviceInformationRequest) {
   // Implement the operation to provide the device information as specified in the DAB Spec 2.0
   // and change the status code of the response accordingly.
 

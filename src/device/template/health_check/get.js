@@ -1,6 +1,6 @@
 // CheckDeviceHealthRequest = {
 // }
-async function process(CheckDeviceHealthRequest) {
+async function process(deviceId, CheckDeviceHealthRequest) {
   // Implement a device health check operation for your device to ensure that it
   // is up and running and ready to execute DAB requested operations.
 

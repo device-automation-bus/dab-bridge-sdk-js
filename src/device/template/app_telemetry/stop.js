@@ -1,7 +1,7 @@
 // StopApplicationTelemetryRequest = {
 // appId: "appId emulator example",
 // }
-async function process(StopApplicationTelemetryRequest) {
+async function process(deviceId, StopApplicationTelemetryRequest) {
   // Implement the disablement of application level telemetry collection for your device
   // for the app identified by appId and change the status code of the response accordingly.
 

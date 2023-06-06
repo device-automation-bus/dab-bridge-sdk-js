@@ -1,6 +1,6 @@
 // DiscoverDevicesRequest{
 //}
-async function process(DiscoverDevicesRequest) {
+async function process(deviceId, DiscoverDevicesRequest) {
   // Implement an operation to discover all DAB capable devices in the network.
 
   // For this request the expectation is that for each discovered device that

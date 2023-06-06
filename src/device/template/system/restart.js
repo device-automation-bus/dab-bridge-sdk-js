@@ -1,6 +1,6 @@
 // RestartDeviceRequest{
 //}
-async function process(RestartDeviceRequest) {
+async function process(deviceId, RestartDeviceRequest) {
   // Implement an operation to restart the device.
 
   // Enhance the sample response provided below with additional parameters as specified in

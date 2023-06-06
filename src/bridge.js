@@ -58,6 +58,8 @@ class dabBridge {
           return '{"status":501, "error":"The requested functionality is not implemented."}';
         }
       }
+    } else if (deviceId === "discovery") {
+      return await this.processDabOperation("", "discovery", params);
     } else {
       // This is a operator for a device. Check if this is a operator for a device added to this bridge
       if (this.deviceTable.isDeviceAdded(deviceId)) {
@@ -88,7 +90,7 @@ class dabBridge {
     const functionPath =
       "./device/" + this.target + "/" + functionMap[dabOperation];
     const functionProcess = require(functionPath);
-    response = await functionProcess(params);
+    response = await functionProcess(deviceId, params);
     return response;
   }
 }

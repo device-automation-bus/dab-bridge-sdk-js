@@ -48,8 +48,9 @@ function main() {
 
   // Connect to the MQTT broker
   this.mqttClient = mqtt.connect("mqtt://" + brokerIP, { protocolVersion: 5 });
-  // Subscribe to all topics starting with dab/bridge
+  // Subscribe to all topics starting with dab/bridge and dab/discovery
   this.mqttClient.subscribe("dab/bridge/#", { qos: 1 });
+  this.mqttClient.subscribe("dab/discovery", { qos: 1 });
   // Handle incoming messages
   this.mqttClient.on("message", async (topic, message, packet) => {
     console.log("\nReceived MQTT Message:");

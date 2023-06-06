@@ -2,7 +2,7 @@
 // appId: "appId emulator example",
 // contentId: "contentId emulator example",
 // }
-async function process(LaunchApplicationWithContentRequest) {
+async function process(deviceId, LaunchApplicationWithContentRequest) {
   // Implement the operation to launch the application identified by appId and pass a
   // contentId parameter to the app. Also change the status code of the response accordingly.
 

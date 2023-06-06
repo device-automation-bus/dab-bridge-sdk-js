@@ -1,6 +1,6 @@
 // ListSupportedVoiceSystemsRequest{
 //}
-async function process(ListSupportedVoiceSystemsRequest) {
+async function process(deviceId, ListSupportedVoiceSystemsRequest) {
   // Implement an operation to get the list of supported voice assistant systems on the device.
 
   // Enhance the sample response provided below with additional parameters as specified in
