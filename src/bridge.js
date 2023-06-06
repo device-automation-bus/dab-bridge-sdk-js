@@ -42,7 +42,7 @@ class dabBridge {
         } else if (brigeOperation == "remove-device") {
           // Implements dab/bridge/<bridgeID>/remove-device operation
           if (!this.deviceTable.isIpAdded(params.ip)) {
-            return '{"status":501, "error":"The requested functionality is not implemented."}';
+            return `{"status":501, "error":"The requested device ${params.ip} is not recorded in the bridge."}`;
           } else {
             this.deviceTable.removeDevice("dummyDeviceID");
             return '{"status":200}';
