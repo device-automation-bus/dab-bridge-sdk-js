@@ -13,14 +13,14 @@ class dabBridge {
   async processMqttMessage(topic, message, mqttClient) {
     // Get topic structure
     const topicStructure = Array.from(topic.split("/"));
-    // Get the deviceId from the topic
-    const deviceId = topicStructure[1];
+    // Get the messageRoute from the topic
+    const messageRoute = topicStructure[1];
     // Get the params from the message
     const params = JSON.parse(message.toString());
 
     // Check if this is a operation for a bridge. If not, check if this is a operation for a device
     let dabOperation = "";
-    if (deviceId == "bridge") {
+    if (messageRoute == "bridge") {
       // This is a operation for a bridge. Check if this is a operator for this bridge instance
       let targetBridge = topicStructure[2];
       if (targetBridge == this.bridgeID) {
@@ -58,14 +58,14 @@ class dabBridge {
           return '{"status":501, "error":"The requested functionality is not implemented."}';
         }
       }
-    } else if (deviceId === "discovery") {
+    } else if (messageRoute === "discovery") {
       return await this.processDabOperation("", "discovery", params);
     } else {
       // This is a operator for a device. Check if this is a operator for a device added to this bridge
-      if (this.deviceTable.isDeviceAdded(deviceId)) {
+      if (this.deviceTable.isDeviceAdded(messageRoute)) {
         // Get the operation from the topic
         dabOperation = topicStructure.slice(2, topicStructure.length).join("/");
-        return await this.processDabOperation(this.deviceTable.getIp(deviceId), dabOperation, params);
+        return await this.processDabOperation(this.deviceTable.getIp(messageRoute), dabOperation, params);
       }
     }
 
