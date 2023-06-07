@@ -1,6 +1,6 @@
 // GetCurrentSystemSettingsRequest{
 //}
-async function process(GetCurrentSystemSettingsRequest) {
+async function process(deviceIp, GetCurrentSystemSettingsRequest) {
   // Implement an operation to get the currently set values of relevant system settings on the device.
 
   // Enhance the sample response provided below with additional parameters as specified in

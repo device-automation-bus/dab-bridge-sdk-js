@@ -1,6 +1,6 @@
 // ListSupportedSystemSettingsRequest{
 //}
-async function process(ListSupportedSystemSettingsRequest) {
+async function process(deviceIp, ListSupportedSystemSettingsRequest) {
   // Implement an operation to get the list of supported system setting operations on the device.
 
   // Enhance the sample response provided below with additional parameters as specified in

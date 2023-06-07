@@ -1,7 +1,7 @@
 // StartDeviceTelemetryRequest = {
 // frequency: 0,
 // }
-async function process(StartDeviceTelemetryRequest) {
+async function process(deviceIp, StartDeviceTelemetryRequest) {
   // Implement the enablement of device level telemetry collection for your device
   // at the requested update frequency and change the status code of the response accordingly.
 

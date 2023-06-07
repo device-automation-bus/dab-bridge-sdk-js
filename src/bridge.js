@@ -10,17 +10,17 @@ class dabBridge {
     this.deviceTable = new DeviceTable();
   }
 
-  async processMqttMessage(topic, message) {
+  async processMqttMessage(topic, message, mqttClient) {
     // Get topic structure
     const topicStructure = Array.from(topic.split("/"));
-    // Get the deviceId from the topic
-    const deviceId = topicStructure[1];
+    // Get the messageRoute from the topic
+    const messageRoute = topicStructure[1];
     // Get the params from the message
     const params = JSON.parse(message.toString());
 
     // Check if this is a operation for a bridge. If not, check if this is a operation for a device
     let dabOperation = "";
-    if (deviceId == "bridge") {
+    if (messageRoute == "bridge") {
       // This is a operation for a bridge. Check if this is a operator for this bridge instance
       let targetBridge = topicStructure[2];
       if (targetBridge == this.bridgeID) {
@@ -32,14 +32,17 @@ class dabBridge {
             let newDeviceID = "device" + this.deviceCounter;
             this.deviceCounter++;
             this.deviceTable.addDevice(newDeviceID, params.ip);
-            return '{"status":200, "deviceID":"' + newDeviceID + '"}';
+            // Subscribe to messages for this device ID
+            mqttClient.subscribe(`dab/${newDeviceID}/#`, { qos: 1 });
+            console.log(`Subscribed to the topic: dab/${newDeviceID}/#`);
+            return {"status":200, "deviceID":`${newDeviceID}`};
           } else {
             return '{"status":500, "error":"IP already added"}';
           }
         } else if (brigeOperation == "remove-device") {
           // Implements dab/bridge/<bridgeID>/remove-device operation
           if (!this.deviceTable.isIpAdded(params.ip)) {
-            return '{"status":501, "error":"The requested functionality is not implemented."}';
+            return `{"status":501, "error":"The requested device ${params.ip} is not recorded in the bridge."}`;
           } else {
             this.deviceTable.removeDevice("dummyDeviceID");
             return '{"status":200}';
@@ -55,19 +58,21 @@ class dabBridge {
           return '{"status":501, "error":"The requested functionality is not implemented."}';
         }
       }
+    } else if (messageRoute === "discovery") {
+      return await this.processDabOperation("", "discovery", params);
     } else {
       // This is a operator for a device. Check if this is a operator for a device added to this bridge
-      if (this.deviceTable.isDeviceAdded(deviceId)) {
+      if (this.deviceTable.isDeviceAdded(messageRoute)) {
         // Get the operation from the topic
         dabOperation = topicStructure.slice(2, topicStructure.length).join("/");
-        return await this.processDabOperation(deviceId, dabOperation, params);
+        return await this.processDabOperation(this.deviceTable.getIp(messageRoute), dabOperation, params);
       }
     }
 
     return 0;
   }
 
-  async processDabOperation(deviceId, dabOperation, params) {
+  async processDabOperation(deviceIp, dabOperation, params) {
     let structMap = require("./structsMap.js");
     let structFile = structMap[dabOperation];
     let dabStruct = require(structFile);
@@ -85,7 +90,7 @@ class dabBridge {
     const functionPath =
       "./device/" + this.target + "/" + functionMap[dabOperation];
     const functionProcess = require(functionPath);
-    response = await functionProcess(params);
+    response = await functionProcess(deviceIp, params);
     return response;
   }
 }
