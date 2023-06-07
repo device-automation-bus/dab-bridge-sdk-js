@@ -1,7 +1,7 @@
 // SetVoiceSystemRequest = {
 // voiceSystem: VoiceSystem;
 // }
-async function process(SetVoiceSystemRequest) {
+async function process(deviceIp, SetVoiceSystemRequest) {
   // Implement an operation to switch the active voice assistant system on the device.
 
   // Enhance the sample response provided below with additional parameters as specified in

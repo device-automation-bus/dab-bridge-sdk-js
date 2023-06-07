@@ -1,6 +1,6 @@
 // ListSupportedKeysRequest = {
 // }
-async function process(ListSupportedKeysRequest) {
+async function process(deviceIp, ListSupportedKeysRequest) {
   // Implement an operation that returns the list of supported keys on the device.
 
   // Enhance the sample response provided below with additional parameters as specified in
