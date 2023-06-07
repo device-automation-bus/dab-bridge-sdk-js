@@ -35,14 +35,14 @@ class dabBridge {
             // Subscribe to messages for this device ID
             mqttClient.subscribe(`dab/${newDeviceID}/#`, { qos: 1 });
             console.log(`Subscribed to the topic: dab/${newDeviceID}/#`);
-            return '{"status":200, "deviceID":"' + newDeviceID + '"}';
+            return {"status":200, "deviceID":`${newDeviceID}`};
           } else {
             return '{"status":500, "error":"IP already added"}';
           }
         } else if (brigeOperation == "remove-device") {
           // Implements dab/bridge/<bridgeID>/remove-device operation
           if (!this.deviceTable.isIpAdded(params.ip)) {
-            return '{"status":501, "error":"The requested functionality is not implemented."}';
+            return `{"status":501, "error":"The requested device ${params.ip} is not recorded in the bridge."}`;
           } else {
             this.deviceTable.removeDevice("dummyDeviceID");
             return '{"status":200}';
