@@ -53,16 +53,33 @@ function main() {
   this.mqttClient.subscribe("dab/discovery", { qos: 1 });
   // Handle incoming messages
   this.mqttClient.on("message", async (topic, message, packet) => {
-    // Process the incoming message and wait for the response
-    response = await bridge.processMqttMessage(topic, message);
+    console.log("\nReceived MQTT Message:");
+    console.log(`Topic: ${topic}`);
+    console.log(`Message: ${JSON.stringify(message)}`);
+    console.log(`Packet: ${JSON.stringify(packet)}`);
 
-    // If there is a response, publish it
-    if (response !== 0) {
-      // Get ResponseTopic property
-      const responseTopic = packet.properties.responseTopic;
-      // Get correlationData property
-      const correlationData = packet.properties.correlationData;
-      // Publish the response
+    // Process the incoming message and wait for the response
+    // Get ResponseTopic property
+    const responseTopic = packet.properties.responseTopic;
+    // Get correlationData property
+    const correlationData = packet.properties.correlationData;
+    console.log("\nPublishing Response:");
+    console.log(`Topic: ${JSON.stringify(responseTopic)}`);
+    console.log(`Correlation Data: ${JSON.stringify({ properties: { correlationData }})}`);
+    response = await bridge.processMqttMessage(topic, message, this.mqttClient);
+
+    // Check if the response is an array or an individual entity
+    if (Array.isArray(response)) {
+      for (responseIndex in response) {
+        console.log(`Message: ${JSON.stringify(response[responseIndex])}`);
+        this.mqttClient.publish(
+          responseTopic,
+          JSON.stringify(response[responseIndex]),
+          JSON.stringify({ properties: { correlationData } })
+        );
+      }
+    } else {
+      console.log(`Message: ${JSON.stringify(response)}`);
       this.mqttClient.publish(
         responseTopic,
         JSON.stringify(response),
