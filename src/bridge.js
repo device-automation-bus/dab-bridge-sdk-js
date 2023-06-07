@@ -10,7 +10,7 @@ class dabBridge {
     this.deviceTable = new DeviceTable();
   }
 
-  async processMqttMessage(topic, message) {
+  async processMqttMessage(topic, message, mqttClient) {
     // Get topic structure
     const topicStructure = Array.from(topic.split("/"));
     // Get the deviceId from the topic
@@ -32,6 +32,9 @@ class dabBridge {
             let newDeviceID = "device" + this.deviceCounter;
             this.deviceCounter++;
             this.deviceTable.addDevice(newDeviceID, params.ip);
+            // Subscribe to messages for this device ID
+            mqttClient.subscribe(`dab/${newDeviceID}/#`, { qos: 1 });
+            console.log(`Subscribed to the topic: dab/${newDeviceID}/#`);
             return '{"status":200, "deviceID":"' + newDeviceID + '"}';
           } else {
             return '{"status":500, "error":"IP already added"}';
