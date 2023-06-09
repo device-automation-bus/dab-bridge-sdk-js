@@ -8,7 +8,7 @@ function main() {
   // Parse command line arguments using Commander
   const program = new Command();
   program
-    .option("-t, --target <string>", " Example: -t emulator")
+    .option("-t, --target <string>", " Example: -t template")
     .option(
       "-i, --bridgeID <string>",
       "(Optional) The bridge-id on the network. Generates a random bridge-id string if blank. Example: -i myBridge0"
@@ -25,12 +25,12 @@ function main() {
     console.log("Bridge ID not specified. Generating a random bridge ID.");
     bridgeID = options.bridgeID || crypto.randomBytes(5).toString("hex");
   }
-  // Get the target from the command line. Default is emulator
+  // Get the target from the command line. Default is template
   if (options.hasOwnProperty("target")) {
     target = options.target;
   } else {
-    console.log("Target not specified. Defaulting to emulator.");
-    target = "emulator";
+    console.log("Target not specified. Defaulting to template.");
+    target = "template";
   }
   // Get the broker IP from the command line. Default is localhost
   if (options.hasOwnProperty("brokerIP")) {
