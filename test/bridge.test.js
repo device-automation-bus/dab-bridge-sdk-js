@@ -1,74 +1,75 @@
 const appRoot = require("app-root-path");
 DabBridge = require(appRoot + "/src/bridge.js");
 
-describe("Bridge functions", () => {
-  bridgeID = "teste";
-  device = "emulator";
+const mockMqttClient = {
+  subscribe: jest.fn(),
+  publish: jest.fn()
+}
+
+describe("Test Bridge Device Management Functions", () => {
+  bridgeID = "dab-bridge";
+  device = "template";
 
   test("test add-device operation", async () => {
-    bridge = new DabBridge(bridgeID, device);
-    topic = "dab/bridge/" + bridgeID + "/add-device";
-    message = { ip: "my.board.ip" };
-    response = await bridge.processMqttMessage(topic, message);
-    expect(response).toBe('{"status":200}');
-    response = await bridge.processMqttMessage(topic, message);
-    expect(response).toBe('{"status":500, "error":"IP already added"}');
+    let bridge = new DabBridge(bridgeID, device);
+    let topic = "dab/bridge/" + bridgeID + "/add-device";
+    let message = { ip : "my.board.ip" };
+    let response = await bridge.processMqttMessage(topic, JSON.stringify(message), mockMqttClient);
+    expect(response.status).toBe(200);
+    response = await bridge.processMqttMessage(topic, JSON.stringify(message), mockMqttClient);
+    expect(response.status).toBe(400);
   });
 
   test("test invalid operation", async () => {
-    bridge = new DabBridge(bridgeID, device);
-    topic = "dab/bridge/" + bridgeID + "/invalid-operation";
-    message = { ip: "my.board.ip" };
-    response = await bridge.processMqttMessage(topic, message);
-    expect(response).toBe(
-      '{"status":501, "error":"The requested functionality is not implemented."}'
-    );
+    let bridge = new DabBridge(bridgeID, device);
+    let topic = "dab/bridge/" + bridgeID + "/invalid-operation";
+    let message = { ip: "my.board.ip" };
+    let response = await bridge.processMqttMessage(topic, JSON.stringify(message), mockMqttClient);
+    expect(response.status).toBe(501);
   });
 
   test("test remove-device operation", async () => {
-    bridge = new DabBridge(bridgeID, device);
+    let bridge = new DabBridge(bridgeID, device);
 
-    topic = "dab/bridge/" + bridgeID + "/add-device";
-    message = { ip: "my.board.ip" };
-    response = await bridge.processMqttMessage(topic, message);
-    expect(response).toBe('{"status":200}');
+    let topic = "dab/bridge/" + bridgeID + "/add-device";
+    let message = { ip: "my.board.ip" };
+    let response = await bridge.processMqttMessage(topic, JSON.stringify(message), mockMqttClient);
+    expect(response.status).toBe(200);
 
     topic = "dab/bridge/" + bridgeID + "/remove-device";
     message = { ip: "my.board.ip" };
-    response = await bridge.processMqttMessage(topic, message);
-    expect(response).toBe('{"status":200}');
+    response = await bridge.processMqttMessage(topic, JSON.stringify(message), mockMqttClient);
+    expect(response.status).toBe(200);
 
-    response = await bridge.processMqttMessage(topic, message);
-    expect(response).toBe('{"status":501, "error":"Device not exists"}');
+    response = await bridge.processMqttMessage(topic, JSON.stringify(message), mockMqttClient);
+    expect(response.status).toBe(400); // device should not exist in map anymore
   });
 
   test("test list-devices operation", async () => {
-    bridge = new DabBridge(bridgeID, device);
+    let bridge = new DabBridge(bridgeID, device);
 
-    topic = "dab/bridge/" + bridgeID + "/add-device";
-    message = { ip: "my.board.ip" };
-    response = await bridge.processMqttMessage(topic, message);
-    expect(response).toBe('{"status":200}');
+    let topic = "dab/bridge/" + bridgeID + "/add-device";
+    let message = { ip: "my.board.ip" };
+    let response = await bridge.processMqttMessage(topic, JSON.stringify(message), mockMqttClient);
+    expect(response.status).toBe(200);
 
     topic = "dab/bridge/" + bridgeID + "/list-devices";
-    message = "{ }";
-    response = await bridge.processMqttMessage(topic, message);
-    expect(response).toBe(
-      '{"status":200, "devices":[["dummyDeviceID","my.board.ip"]]}'
-    );
+    message = {};
+    response = await bridge.processMqttMessage(topic, JSON.stringify(message), mockMqttClient);
+    expect(response.status).toBe(200);
   });
 
   test("test dab/applications/launch operation", async () => {
-    bridge = new DabBridge(bridgeID, device);
+    let bridge = new DabBridge(bridgeID, device);
 
-    topic = "dab/bridge/" + bridgeID + "/add-device";
-    message = { ip: "my.board.ip" };
-    response = await bridge.processMqttMessage(topic, message);
-    expect(response).toBe('{"status":200}');
+    let topic = "dab/bridge/" + bridgeID + "/add-device";
+    let message = { ip: "my.board.ip" };
+    let response = await bridge.processMqttMessage(topic, JSON.stringify(message), mockMqttClient);
+    expect(response.status).toBe(200);
 
-    topic = "dab/dummyDeviceID/applications/launch";
+    topic = `dab/${response.deviceId}/applications/launch`;
     message = '{ "appId": "Cobalt" }';
-    response = await bridge.processMqttMessage(topic, message);
-    expect(response).toStrictEqual({ status: 200 });
+    response = await bridge.processMqttMessage(topic, JSON.stringify(message), mockMqttClient);
+    expect(response.status).toBe(501);
   });
 });

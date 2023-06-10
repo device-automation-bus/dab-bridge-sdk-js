@@ -1,7 +1,7 @@
 const { default: request } = require("sync-request");
 const Ajv = require("ajv");
 
-class dabBridge {
+class DabBridge {
   constructor(bridgeID, device) {
     this.target = device;
     this.bridgeID = bridgeID;
@@ -16,17 +16,20 @@ class dabBridge {
     // Get the messageRoute from the topic
     const messageRoute = topicStructure[1];
     // Get the params from the message
+    console.log(message);
     const params = JSON.parse(message.toString());
 
     // Check if this is a operation for a bridge. If not, check if this is a operation for a device
+
+    // TODO fix this design, MQTT routes shouldn't be broadly subscribed to and processed like this.
     let dabOperation = "";
-    if (messageRoute == "bridge") {
+    if (messageRoute === "bridge") {
       // This is a operation for a bridge. Check if this is a operator for this bridge instance
       let targetBridge = topicStructure[2];
-      if (targetBridge == this.bridgeID) {
+      if (targetBridge === this.bridgeID) {
         // Get the operation from the topic
-        let brigeOperation = topicStructure[3];
-        if (brigeOperation == "add-device") {
+        let bridgeOperation = topicStructure[3];
+        if (bridgeOperation === "add-device") {
           // Implements dab/bridge/<bridgeID>/add-device operation
           if (!this.deviceTable.isIpAdded(params.ip)) {
             let newDeviceID = "device" + this.deviceCounter;
@@ -35,31 +38,33 @@ class dabBridge {
             // Subscribe to messages for this device ID
             mqttClient.subscribe(`dab/${newDeviceID}/#`, { qos: 1 });
             console.log(`Subscribed to the topic: dab/${newDeviceID}/#`);
-            return {"status":200, "deviceID":`${newDeviceID}`};
+            return {"status":200, "deviceId":`${newDeviceID}`};
           } else {
-            return '{"status":500, "error":"IP already added"}';
+            return {"status":400, "error":"IP already added"};
           }
-        } else if (brigeOperation == "remove-device") {
+        } else if (bridgeOperation === "remove-device") {
           // Implements dab/bridge/<bridgeID>/remove-device operation
-          if (!this.deviceTable.isIpAdded(params.ip)) {
-            return `{"status":501, "error":"The requested device ${params.ip} is not recorded in the bridge."}`;
+          if (!this.deviceTable.removeDeviceWithIP(params.ip)) {
+            return {"status":400, "error":`The requested device ${params.ip} is not recorded in the bridge.`};
           } else {
-            this.deviceTable.removeDevice("dummyDeviceID");
-            return '{"status":200}';
+            return {"status":200};
           }
-        } else if (brigeOperation == "list-devices") {
+        } else if (bridgeOperation === "list-devices") {
           // Implements dab/bridge/<bridgeID>/list-devices operation
-          return (
-            '{"status":200, "devices":' +
-            JSON.stringify(this.deviceTable.getAllDevices()) +
-            "}"
-          );
+          return {"status":200, "devices": this.deviceTable.getAllDevices()};
         } else {
-          return '{"status":501, "error":"The requested functionality is not implemented."}';
+          return {"status":501, "error":"The requested functionality is not implemented."};
         }
       }
     } else if (messageRoute === "discovery") {
-      return await this.processDabOperation("", "discovery", params);
+      let discoveryResponses = [];
+
+      for(const [entryDeviceID, entryIP] of this.deviceTable.getAllDevices()){
+        console.log(entryDeviceID + " " + entryIP);
+        discoveryResponses.push({"status": 200, "deviceId": entryDeviceID, "ip": entryIP});
+      }
+
+      return discoveryResponses;
     } else {
       // This is a operator for a device. Check if this is a operator for a device added to this bridge
       if (this.deviceTable.isDeviceAdded(messageRoute)) {
@@ -69,7 +74,7 @@ class dabBridge {
       }
     }
 
-    return 0;
+    return null;
   }
 
   async processDabOperation(deviceIp, dabOperation, params) {
@@ -90,8 +95,7 @@ class dabBridge {
     const functionPath =
       "./device/" + this.target + "/" + functionMap[dabOperation];
     const functionProcess = require(functionPath);
-    response = await functionProcess(deviceIp, params);
-    return response;
+    return await functionProcess(deviceIp, params);
   }
 }
 
@@ -100,9 +104,9 @@ class DeviceTable {
     this.map = {};
   }
   // Add a device-IP pair to the table
-  addDevice = (device, IP) => (this.map[device] = IP);
+  addDevice = (deviceId, IP) => (this.map[deviceId] = IP);
   // Get the IP associated with a device
-  getIp = (device) => this.map[device];
+  getIp = (deviceId) => this.map[deviceId];
   // Check if the table contains a device by its ip
   isIpAdded = (ip) => {
     for (const key in this.map) {
@@ -113,11 +117,21 @@ class DeviceTable {
     return false;
   };
   // Check if the table contains a device by its name
-  isDeviceAdded = (device) => device in this.map;
-  // Remove a device-IP pair from the table
-  removeDevice = (device) => delete this.map[device];
+  isDeviceAdded = (deviceId) => deviceId in this.map;
+
+  // Removes a device-IP pair from the table
+  removeDeviceWithIP = (IP) => {
+    let targetDeviceId = null;
+    for (const deviceId in this.map) {
+      if (this.map[deviceId] === IP) {
+        delete this.map[deviceId]; // Remove current property
+        return true;
+      }
+    }
+    return false;
+  }
   // Get all the entries in the table
   getAllDevices = () => Object.entries(this.map);
 }
 
-module.exports = dabBridge;
+module.exports = DabBridge;

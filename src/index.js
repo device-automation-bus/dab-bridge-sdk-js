@@ -66,7 +66,10 @@ function main() {
     console.log("\nPublishing Response:");
     console.log(`Topic: ${JSON.stringify(responseTopic)}`);
     console.log(`Correlation Data: ${JSON.stringify({ properties: { correlationData }})}`);
-    response = await bridge.processMqttMessage(topic, message, this.mqttClient);
+    let response = await bridge.processMqttMessage(topic, message, this.mqttClient);
+
+    if(response === null) return;
+    // No response to this message was warranted. When the design refactor is dropped this won't be necessary.
 
     // Check if the response is an array or an individual entity
     if (Array.isArray(response)) {

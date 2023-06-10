@@ -25,7 +25,6 @@ functionMap["voice/list"] = "/voice/list.js";
 functionMap["voice/set"] = "/voice/set.js";
 functionMap["voice/send-audio"] = "/voice/send_audio.js";
 functionMap["voice/send-text"] = "/voice/send_text.js";
-functionMap["discovery"] = "/discovery.js";
 functionMap["version"] = "/version.js";
 functionMap["system/language/list"] = "/system/language/list.js";
 functionMap["system/language/get"] = "/system/language/get.js";

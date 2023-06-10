@@ -25,7 +25,6 @@ structMap["voice/list"] = "./structs/voice/list.js";
 structMap["voice/set"] = "./structs/voice/set.js";
 structMap["voice/send-audio"] = "./structs/voice/send_audio.js";
 structMap["voice/send-text"] = "./structs/voice/send_text.js";
-structMap["discovery"] = "./structs/discovery.js";
 structMap["version"] = "./structs/version.js";
 structMap["system/language/list"] = "./structs/system/language/list.js";
 structMap["system/language/get"] = "./structs/system/language/get.js";
