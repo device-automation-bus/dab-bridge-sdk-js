@@ -14,8 +14,17 @@ describe("Test Bridge Device Management Functions", () => {
     let bridge = new DabBridge(bridgeID, device);
     let topic = "dab/bridge/" + bridgeID + "/add-device";
     let message = { ip : "my.board.ip" };
+
+    // Since this is an invalid IP, we expect the partner health check to fail
     let response = await bridge.processMqttMessage(topic, JSON.stringify(message), mockMqttClient);
+    expect(response.status).toBe(400);
+
+    // Now set skipValidation as true to skip past partner health check and just add device on demand
+    message.skipValidation = true;
+    response = await bridge.processMqttMessage(topic, JSON.stringify(message), mockMqttClient);
     expect(response.status).toBe(200);
+
+    // Request to add a device with the same IP, we expect the bridge to reject this.
     response = await bridge.processMqttMessage(topic, JSON.stringify(message), mockMqttClient);
     expect(response.status).toBe(400);
   });
@@ -23,7 +32,7 @@ describe("Test Bridge Device Management Functions", () => {
   test("test invalid operation", async () => {
     let bridge = new DabBridge(bridgeID, device);
     let topic = "dab/bridge/" + bridgeID + "/invalid-operation";
-    let message = { ip: "my.board.ip" };
+    let message = { ip: "my.board.ip", skipValidation: true};
     let response = await bridge.processMqttMessage(topic, JSON.stringify(message), mockMqttClient);
     expect(response.status).toBe(501);
   });
@@ -32,12 +41,12 @@ describe("Test Bridge Device Management Functions", () => {
     let bridge = new DabBridge(bridgeID, device);
 
     let topic = "dab/bridge/" + bridgeID + "/add-device";
-    let message = { ip: "my.board.ip" };
+    let message = { ip: "my.board.ip", skipValidation: true};
     let response = await bridge.processMqttMessage(topic, JSON.stringify(message), mockMqttClient);
     expect(response.status).toBe(200);
 
     topic = "dab/bridge/" + bridgeID + "/remove-device";
-    message = { ip: "my.board.ip" };
+    message = { ip: "my.board.ip", skipValidation: true};
     response = await bridge.processMqttMessage(topic, JSON.stringify(message), mockMqttClient);
     expect(response.status).toBe(200);
 
@@ -49,7 +58,7 @@ describe("Test Bridge Device Management Functions", () => {
     let bridge = new DabBridge(bridgeID, device);
 
     let topic = "dab/bridge/" + bridgeID + "/add-device";
-    let message = { ip: "my.board.ip" };
+    let message = { ip: "my.board.ip", skipValidation: true};
     let response = await bridge.processMqttMessage(topic, JSON.stringify(message), mockMqttClient);
     expect(response.status).toBe(200);
 
@@ -59,11 +68,25 @@ describe("Test Bridge Device Management Functions", () => {
     expect(response.status).toBe(200);
   });
 
+  test("test behavior with unsupported operations", async () => {
+    let bridge = new DabBridge(bridgeID, device);
+
+    let topic = "dab/bridge/" + bridgeID + "/add-device";
+    let message = { ip: "my.board.ip", skipValidation: true};
+    let response = await bridge.processMqttMessage(topic, JSON.stringify(message), mockMqttClient);
+    expect(response.status).toBe(200);
+
+    topic = `dab/${response.deviceId}/fake-operator`;
+    message = {};
+    response = await bridge.processMqttMessage(topic, JSON.stringify(message), mockMqttClient);
+    expect(response).toBe(null); // null is currently used to indicate that no response is needed everywhere
+  });
+
   test("test dab/applications/launch operation", async () => {
     let bridge = new DabBridge(bridgeID, device);
 
     let topic = "dab/bridge/" + bridgeID + "/add-device";
-    let message = { ip: "my.board.ip" };
+    let message = { ip: "my.board.ip", skipValidation: true};
     let response = await bridge.processMqttMessage(topic, JSON.stringify(message), mockMqttClient);
     expect(response.status).toBe(200);
 

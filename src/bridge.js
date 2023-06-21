@@ -30,6 +30,12 @@ class DabBridge {
         // Get the operation from the topic
         let bridgeOperation = topicStructure[3];
         if (bridgeOperation === "add-device") {
+          // Perform a health check using partner implementation before adding device
+          if(params.skipValidation !== true){
+            let healthCheckResponse = await this.processDabOperation(params.ip, "health-check/get", {});
+            if(healthCheckResponse.status !== 200) return {"status": 400, "error": "Partner device health check failed."};
+          }
+
           // Implements dab/bridge/<bridgeID>/add-device operation
           if (!this.deviceTable.isIpAdded(params.ip)) {
             let newDeviceID = "device" + this.deviceCounter;
@@ -79,6 +85,13 @@ class DabBridge {
 
   async processDabOperation(deviceIp, dabOperation, params) {
     let structMap = require("./structsMap.js");
+    if(!structMap[dabOperation]){
+      console.log("Ignoring unsupported DAB operation --> " + dabOperation);
+      // TODO: This trick for not responding to unknown DAB operations will be removed
+      // TODO: once the current MQTT listener architecture is re-designed and fixed
+      return null;
+    }
+
     let structFile = structMap[dabOperation];
     let dabStruct = require(structFile);
 
