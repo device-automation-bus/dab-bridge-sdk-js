@@ -63,13 +63,15 @@ function main() {
     const responseTopic = packet.properties.responseTopic;
     // Get correlationData property
     const correlationData = packet.properties.correlationData;
-    console.log("\nPublishing Response:");
-    console.log(`Topic: ${JSON.stringify(responseTopic)}`);
-    console.log(`Correlation Data: ${JSON.stringify({ properties: { correlationData }})}`);
+
     let response = await bridge.processMqttMessage(topic, message, this.mqttClient);
 
     if(response === null) return;
-    // No response to this message was warranted. When the design refactor is dropped this won't be necessary.
+    // No response to this message was warranted. When the listener design refactor is dropped this won't be necessary.
+
+    console.log("\nPublishing Response:");
+    console.log(`Topic: ${JSON.stringify(responseTopic)}`);
+    console.log(`Correlation Data: ${JSON.stringify({ properties: { correlationData }})}`);
 
     // Check if the response is an array or an individual entity
     if (Array.isArray(response)) {
