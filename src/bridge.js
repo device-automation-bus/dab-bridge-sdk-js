@@ -106,24 +106,21 @@ export class DabBridge {
         return response;
     }
 
-    async addDevice(data) {
+    addDevice = async (params) => {
         return this.dabResponse(501, "Not implemented.");
     }
 
-    async removeDevice(data){
+    removeDevice = async (params) => {
         return this.dabResponse(501, "Not implemented.");
     }
 
-    async listDevices(data) {
-        logger.debug(this.bridgeID);
-        logger.debug(this);
+    listDevices = async (params) => {
         return this.dabResponse(501, "Not implemented.");
     }
 
-    version(data){
+    version(){
         const packageVersion = JSON.parse(readFileSync('./package.json', 'utf8')).version;
-        const dabVersion = packageVersion.substring(packageVersion, packageVersion.lastIndexOf(".")); // remove patch version
-        return { ...this.dabResponse(), ...{version: dabVersion} };
+        return { ...this.dabResponse(), ...{version: packageVersion} };
     }
 
 }
