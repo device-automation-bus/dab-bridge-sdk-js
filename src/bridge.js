@@ -1,7 +1,7 @@
 /**
- Copyright 2019 Amazon.com, Inc. or its affiliates.
- Copyright 2019 Netflix Inc.
- Copyright 2019 Google LLC
+ Copyright 2023 Amazon.com, Inc. or its affiliates.
+ Copyright 2023 Netflix Inc.
+ Copyright 2023 Google LLC
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
  You may obtain a copy of the License at
@@ -21,10 +21,7 @@ import {getLogger} from "./lib/util.js";
 const logger = getLogger();
 
 export class DabBridge {
-    /**
-     * Constructor for DabDeviceInterface
-     * Don't construct this interface directly.
-     */
+    
     constructor(bridgeID) {
         logger.debug("Constructing DabBridge with BridgeID=" + bridgeID);
         if (bridgeID) {
