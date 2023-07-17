@@ -1,6 +1,6 @@
 {
   "name": "dab-rdk-bridge-js",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "Enables compatibility of multiple devices based on Reference Design Kit (RDK) with DAB (get-dab.com) through a network",
   "main": "bridge.js",
   "scripts": {
