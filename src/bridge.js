@@ -18,6 +18,8 @@ import  * as topics  from './interface/dab_topics.js';
 import { v4 as uuidv4 } from 'uuid';
 import { readFileSync } from 'fs';
 import {getLogger} from "./lib/util.js";
+import {SampleDabDevice} from "./partner/sample_dab_device.js";
+import config from 'config';
 const logger = getLogger();
 
 export class DabBridge {
@@ -29,6 +31,7 @@ export class DabBridge {
         } else {
             this.bridgeID = uuidv4();
         }
+        this.deviceMap = new Map(); // key: deviceIP, value: DabDevice object / instance
     }
 
     /**
@@ -69,8 +72,8 @@ export class DabBridge {
         // TODO, call stop on all devices
         await Promise.all(
             [
-                this.notify("warn", `DAB Bridge ${this.bridgeID} is online!`),
-                this.client.clearRetained(topics.DAB_VERSION_TOPIC)
+                this.notify("warn", `DAB Bridge ${this.bridgeID} has gone offline.`),
+                this.client.clearRetained(`dab/bridge/${this.bridgeID}/${topics.BRIDGE_VERSION}`)
             ]
         );
 
@@ -81,9 +84,9 @@ export class DabBridge {
      * Publishes notifications to the message topic
      */
     async notify(level, message) {
-        return await this.client.publish(topics.DAB_MESSAGES,
+        return await this.client.publishRetained(`dab/bridge/${this.bridgeID}/${topics.DAB_MESSAGES}`,
             {
-                timestamp: +new Date(),
+                timestamp: new Date().toISOString(),
                 level: level,
                 message: message
             });
@@ -104,15 +107,42 @@ export class DabBridge {
     }
 
     addDevice = async (params) => {
-        return this.dabResponse(501, "Not implemented.");
+        if(!params.ip) return this.dabResponse(400, "IP address of device to add was not included.");
+
+        logger.debug(JSON.stringify(this.deviceMap));
+
+        if(this.deviceMap.has(params.ip)){
+            return this.dabResponse(409,
+                "Conflict in IP address provided. There is already an onboarded device with that IP.");
+        }
+
+        let dabDeviceInstance = new SampleDabDevice(params.ip);
+        await dabDeviceInstance.init(config.get("mqttBroker"));
+        this.deviceMap.set(params.ip, dabDeviceInstance);
+        return {...this.dabResponse(), ...{deviceId: dabDeviceInstance.deviceId}};
     }
 
     removeDevice = async (params) => {
-        return this.dabResponse(501, "Not implemented.");
+        if(!params.ip) return this.dabResponse(400, "IP address of device to remove was not included.");
+
+        logger.debug(JSON.stringify(this.deviceMap));
+
+        if(!this.deviceMap.has(params.ip)){
+            return this.dabResponse(412,
+                "Precondition failed -- IP address provided was not found in deviceMap for this bridge.");
+        }
+
+        this.deviceMap.get(params.ip).stop(); // Stop the device MQTT client and clear any messages
+        this.deviceMap.delete(params.ip); // Delete entry from deviceMap
+        return this.dabResponse();
     }
 
     listDevices = async (params) => {
-        return this.dabResponse(501, "Not implemented.");
+        let deviceArray = [];
+        this.deviceMap.forEach((value, key, map) => {
+            deviceArray.push({ip: key, deviceId: value.deviceId});
+        })
+        return {...this.dabResponse(), ...{deviceList: deviceArray}};
     }
 
     version(){

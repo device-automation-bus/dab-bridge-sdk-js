@@ -52,6 +52,6 @@ export const SEND_AUDIO_TO_VOICE_SYSTEM_TOPIC = "voice/send-audio";
 
 // Bridge specific topics
 export const BRIDGE_ADD_DEVICE = "add-device";
-export const BRIDGE_REMOVE_DEVICE = "add-device";
+export const BRIDGE_REMOVE_DEVICE = "remove-device";
 export const BRIDGE_LIST_DEVICES = "list-devices";
 export const BRIDGE_VERSION = "version";

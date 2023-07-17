@@ -13,7 +13,7 @@
  limitations under the License.
  */
 
-import { MqttClient } from '../lib/mqtt_client';
+import { MqttClient } from '../lib/mqtt_client/index.js';
 import  * as topics  from './dab_topics.js';
 import { v4 as uuidv4 } from 'uuid';
 import { readFileSync } from 'fs';
