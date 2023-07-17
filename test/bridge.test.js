@@ -95,4 +95,16 @@ describe("Test Bridge Device Management Functions", () => {
     response = await bridge.processMqttMessage(topic, JSON.stringify(message), mockMqttClient);
     expect(response.status).toBe(501);
   });
+
+  test("test version operation", async () => {
+    let bridge = new DabBridge(bridgeID, device);
+    let topic = "dab/bridge/" + bridgeID + "/version";
+    let message = {};
+
+    let response = await bridge.processMqttMessage(topic, JSON.stringify(message), mockMqttClient);
+    expect(response.status).toBe(200);
+    expect(response.version).toBe(process.env.npm_package_version);
+  });
+
+
 });

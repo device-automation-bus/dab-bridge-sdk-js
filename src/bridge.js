@@ -1,6 +1,10 @@
 const { default: request } = require("sync-request");
 const Ajv = require("ajv");
 
+const JS_BRIDGE_MAJOR_VERSION = 0,
+    JS_BRIDGE_MINOR_VERSION = 1,
+    JS_BRIDGE_PATCH_VERSION = 0;
+
 class DabBridge {
   constructor(bridgeID, device) {
     this.target = device;
@@ -17,66 +21,85 @@ class DabBridge {
     const messageRoute = topicStructure[1];
     // Get the params from the message
     console.log(message);
-    const params = JSON.parse(message.toString());
-
     // Check if this is a operation for a bridge. If not, check if this is a operation for a device
 
     // TODO fix this design, MQTT routes shouldn't be broadly subscribed to and processed like this.
-    let dabOperation = "";
-    if (messageRoute === "bridge") {
-      // This is a operation for a bridge. Check if this is a operator for this bridge instance
-      let targetBridge = topicStructure[2];
-      if (targetBridge === this.bridgeID) {
-        // Get the operation from the topic
-        let bridgeOperation = topicStructure[3];
-        if (bridgeOperation === "add-device") {
-          // Perform a health check using partner implementation before adding device
-          if(params.skipValidation !== true){
-            let healthCheckResponse = await this.processDabOperation(params.ip, "health-check/get", {});
-            if(healthCheckResponse.status !== 200) return {"status": 400, "error": "Partner device health check failed."};
-          }
+    switch (messageRoute) {
+      case "bridge":
+        return await this.handleBridgeRoute(topic, message, mqttClient);
+      case "discovery": // Unique route that requires the bridge to take action for all devices it is managing
+        let discoveryResponses = [];
 
+        for (const [entryDeviceID, entryIP] of this.deviceTable.getAllDevices()) {
+          console.log(entryDeviceID + " " + entryIP);
+          discoveryResponses.push({"status": 200, "deviceId": entryDeviceID, "ip": entryIP});
+        }
+
+        return discoveryResponses;// Get the operation from the topic
+        break;
+
+      default: // Regular DAB operation to translate with partner implementation
+        let dabOperation = topicStructure.slice(2, topicStructure.length).join("/");
+        let params = JSON.parse(message.toString());
+        return await this.processDabOperation(this.deviceTable.getIp(messageRoute), dabOperation, params);
+        break;
+    }
+
+    return null;
+  }
+
+  async handleBridgeRoute(topic, message, mqttClient){
+
+    const topicStructure = Array.from(topic.split("/"));
+    console.log("Received message from topic -- " + topic)
+    const params = JSON.parse(message.toString());
+
+    // This is an operation for a bridge. Check if this is a operator for this bridge instance
+    let targetBridge = topicStructure[2];
+    if (targetBridge === this.bridgeID) {
+      // Get the operation from the topic
+      let bridgeOperation = topicStructure[3];
+      switch (bridgeOperation) {
+        case "add-device": // Perform a health check using partner implementation before adding device
+          if (params.skipValidation !== true) {
+            let healthCheckResponse = await this.processDabOperation(params.ip, "health-check/get", {});
+            if (healthCheckResponse.status !== 200) return {
+              "status": 400,
+              "error": "Partner device health check failed."
+            };
+          }
           // Implements dab/bridge/<bridgeID>/add-device operation
           if (!this.deviceTable.isIpAdded(params.ip)) {
             let newDeviceID = "device" + this.deviceCounter;
             this.deviceCounter++;
             this.deviceTable.addDevice(newDeviceID, params.ip);
             // Subscribe to messages for this device ID
-            mqttClient.subscribe(`dab/${newDeviceID}/#`, { qos: 1 });
+            mqttClient.subscribe(`dab/${newDeviceID}/#`, {qos: 1});
             console.log(`Subscribed to the topic: dab/${newDeviceID}/#`);
-            return {"status":200, "deviceId":`${newDeviceID}`};
+            return {"status": 200, "deviceId": `${newDeviceID}`};
           } else {
-            return {"status":400, "error":"IP already added"};
+            return {"status": 400, "error": "IP already added"};
           }
-        } else if (bridgeOperation === "remove-device") {
-          // Implements dab/bridge/<bridgeID>/remove-device operation
+          break;
+
+        case "remove-device": // Implements dab/bridge/<bridgeID>/remove-device operation
           if (!this.deviceTable.removeDeviceWithIP(params.ip)) {
-            return {"status":400, "error":`The requested device ${params.ip} is not recorded in the bridge.`};
+            return {"status": 400, "error": `The requested device ${params.ip} is not recorded in the bridge.`};
           } else {
-            return {"status":200};
+            return {"status": 200};
           }
-        } else if (bridgeOperation === "list-devices") {
-          // Implements dab/bridge/<bridgeID>/list-devices operation
-          return {"status":200, "devices": this.deviceTable.getAllDevices()};
-        } else {
-          return {"status":501, "error":"The requested functionality is not implemented."};
-        }
-      }
-    } else if (messageRoute === "discovery") {
-      let discoveryResponses = [];
+          break;
 
-      for(const [entryDeviceID, entryIP] of this.deviceTable.getAllDevices()){
-        console.log(entryDeviceID + " " + entryIP);
-        discoveryResponses.push({"status": 200, "deviceId": entryDeviceID, "ip": entryIP});
-      }
+        case "list-devices": // Implements dab/bridge/<bridgeID>/list-devices operation
+          return {"status": 200, "devices": this.deviceTable.getAllDevices()};
+          break;
 
-      return discoveryResponses;
-    } else {
-      // This is a operator for a device. Check if this is a operator for a device added to this bridge
-      if (this.deviceTable.isDeviceAdded(messageRoute)) {
-        // Get the operation from the topic
-        dabOperation = topicStructure.slice(2, topicStructure.length).join("/");
-        return await this.processDabOperation(this.deviceTable.getIp(messageRoute), dabOperation, params);
+        case "version":
+          return {"status": 200, "version": `${JS_BRIDGE_MAJOR_VERSION}.${JS_BRIDGE_MINOR_VERSION}.${JS_BRIDGE_PATCH_VERSION}`};
+          break;
+
+        default:
+          return {"status": 501, "error": "The requested functionality is not implemented."};
       }
     }
 

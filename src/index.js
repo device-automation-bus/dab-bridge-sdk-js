@@ -18,7 +18,8 @@ function main() {
       "(Optional) The IP address of the MQTT broker. Defaults to mqtt://localhost if blank. Example: -b 192.168.0.123"
     )
     .helpOption("-h, --help", "Display help for command");
-  options = program.parse(process.argv).opts();
+  let options = program.parse(process.argv).opts();
+  let bridgeID, target, brokerIP;
   if (options.hasOwnProperty("bridgeID")) {
     bridgeID = options.bridgeID;
   } else {
@@ -66,7 +67,10 @@ function main() {
 
     let response = await bridge.processMqttMessage(topic, message, this.mqttClient);
 
-    if(response === null) return;
+    if(response === null){ // TODO, this categorization won't be required once we stop subscribing with wildcards
+      console.log("No response warranted from this bridge (null). Ignoring request.");
+      return;
+    }
     // No response to this message was warranted. When the listener design refactor is dropped this won't be necessary.
 
     console.log("\nPublishing Response:");
@@ -75,7 +79,7 @@ function main() {
 
     // Check if the response is an array or an individual entity
     if (Array.isArray(response)) {
-      for (responseIndex in response) {
+      for (let responseIndex in response) {
         console.log(`Message: ${JSON.stringify(response[responseIndex])}`);
         this.mqttClient.publish(
           responseTopic,
