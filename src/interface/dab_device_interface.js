@@ -118,13 +118,17 @@ export class DabDeviceInterface {
     /**
      * @typedef {Object} DabResponse
      * @property {number} status - Response status code
-     * @property {string} [error] - Error message if non 2XX response returned
+     * @property {string|Object} [errorOrData] - Error message if non 2XX response returned, or any json data to send along with 200
      */
-    dabResponse(status = 200, error) {
-        const response = {status: status};
+    dabResponse(status = 200, errorOrData) {
+        let response = {status: status};
         if (Math.floor(status / 100) !== 2) {
-            if (!error) throw new Error("Error message must be returned for non 2XX status results");
-            response.error = error;
+            if (!errorOrData) throw new Error("Error message must be returned for non 2XX status results");
+            response.error = errorOrData;
+        } else { // If the status is 200, then
+            if(errorOrData){
+                response = {...status, ...errorOrData}; // Expand errorOrMessage
+            }
         }
         return response;
     }
