@@ -25,6 +25,7 @@ export const SYSTEM_LANGUAGE_GET_TOPIC = "system/language/get";
 export const SYSTEM_LANGUAGE_SET_TOPIC = "system/language/set";
 export const SYSTEM_SETTING_LIST_TOPIC = "system/settings/list";
 export const SYSTEM_SETTING_SET = "system/settings/set";
+export const SYSTEM_SETTING_GET = "system/settings/set";
 export const DEVICE_CAPTURE_IMAGE = "output/image";
 
 export const DEVICE_TELEMETRY_START_TOPIC = "device-telemetry/start";
@@ -36,6 +37,7 @@ export const APP_TELEMETRY_STOP_TOPIC = "app-telemetry/stop";
 export const TELEMETRY_METRICS_TOPIC = "device-telemetry/metrics";
 
 export const INPUT_KEY_PRESS_TOPIC = "input/key-press";
+export const INPUT_KEY_LIST_TOPIC = "input/key/list";
 export const INPUT_LONG_KEY_PRESS_TOPIC = "input/long-key-press";
 
 export const HEALTH_CHECK_TOPIC = "health-check/get";
@@ -46,6 +48,7 @@ export const DAB_VERSION_TOPIC = "version";
 export const DAB_MESSAGES = "messages";
 export const DISCOVERY = "discovery";
 
+export const VOICE_LIST_TOPIC = "voice/list";
 export const SEND_TEXT_TO_VOICE_SYSTEM_TOPIC = "voice/send-text";
 export const SEND_AUDIO_TO_VOICE_SYSTEM_TOPIC = "voice/send-audio";
 

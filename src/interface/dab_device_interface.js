@@ -46,19 +46,27 @@ export class DabDeviceInterface {
             [
                 this.client.handle(`dab/${this.deviceId}/${topics.APPLICATIONS_LIST_TOPIC}`, this.listApps),
                 this.client.handle(`dab/${this.deviceId}/${topics.APPLICATIONS_LAUNCH_TOPIC}`, this.launchApp),
+                this.client.handle(`dab/${this.deviceId}/${topics.APPLICATIONS_LAUNCH_WITH_CONTENT_TOPIC}`, this.launchWithContent),
+                this.client.handle(`dab/${this.deviceId}/${topics.APPLICATIONS_GET_STATE_TOPIC}`, this.getAppState),
                 this.client.handle(`dab/${this.deviceId}/${topics.APPLICATIONS_EXIT_TOPIC}`, this.exitApp),
+                this.client.handle(`dab/${this.deviceId}/${topics.DEVICE_INFO_TOPIC}`, this.deviceInfo),
                 this.client.handle(`dab/${this.deviceId}/${topics.SYSTEM_RESTART_TOPIC}`, this.restartDevice),
+                this.client.handle(`dab/${this.deviceId}/${topics.SYSTEM_SETTING_LIST_TOPIC}`, this.listSystemSettings),
+                this.client.handle(`dab/${this.deviceId}/${topics.SYSTEM_SETTING_GET}`, this.getSystemSettings),
+                this.client.handle(`dab/${this.deviceId}/${topics.SYSTEM_SETTING_SET}`, this.setSystemSettings),
+                this.client.handle(`dab/${this.deviceId}/${topics.INPUT_KEY_LIST_TOPIC}`, this.listSupportedKeys),
                 this.client.handle(`dab/${this.deviceId}/${topics.INPUT_KEY_PRESS_TOPIC}`, this.keyPress),
                 this.client.handle(`dab/${this.deviceId}/${topics.INPUT_LONG_KEY_PRESS_TOPIC}`, this.keyPressLong),
-                this.client.handle(`dab/${this.deviceId}/${topics.SYSTEM_LANGUAGE_SET_TOPIC}`, this.setSystemLanguage),
-                this.client.handle(`dab/${this.deviceId}/${topics.SYSTEM_LANGUAGE_GET_TOPIC}`, this.getSystemLanguage),
+                this.client.handle(`dab/${this.deviceId}/${topics.DEVICE_CAPTURE_IMAGE}`, this.outputImage),
                 this.client.handle(`dab/${this.deviceId}/${topics.DEVICE_TELEMETRY_START_TOPIC}`, this.startDeviceTelemetry),
                 this.client.handle(`dab/${this.deviceId}/${topics.DEVICE_TELEMETRY_STOP_TOPIC}`, this.stopDeviceTelemetry),
                 this.client.handle(`dab/${this.deviceId}/${topics.APP_TELEMETRY_START_TOPIC}`, this.startAppTelemetry),
                 this.client.handle(`dab/${this.deviceId}/${topics.APP_TELEMETRY_STOP_TOPIC}`, this.stopAppTelemetry),
                 this.client.handle(`dab/${this.deviceId}/${topics.HEALTH_CHECK_TOPIC}`, this.healthCheck),
                 this.client.handle(`dab/${topics.DISCOVERY}`, this.discovery),
-                this.client.handle(`dab/${this.deviceId}/${topics.SEND_TEXT_TO_VOICE_SYSTEM_TOPIC}`, this.sendVoiceText)
+                this.client.handle(`dab/${this.deviceId}/${topics.VOICE_LIST_TOPIC}`, this.voiceList),
+                this.client.handle(`dab/${this.deviceId}/${topics.SEND_TEXT_TO_VOICE_SYSTEM_TOPIC}`, this.sendVoiceText),
+                this.client.handle(`dab/${this.deviceId}/${topics.SEND_AUDIO_TO_VOICE_SYSTEM_TOPIC}`, this.sendVoiceAudio)
             ]
         );
 
@@ -258,7 +266,7 @@ export class DabDeviceInterface {
      */
 
     /**
-     * Publishes a retained message to the device info topic
+     *
      * @abstract
      * @returns {Promise<DabResponse|DeviceInformation>}
      */
@@ -332,9 +340,13 @@ export class DabDeviceInterface {
      * @param {string} data.keyCode - string literal, prefixed with KEY_ or KEY_CUSTOM_ per spec
      * @returns {Promise<DabResponse>}
      */
-         async keyPress(data) {
-            return {status: 501, error: "Key press not implemented"};
-        }
+     async keyPress(data) {
+        return {status: 501, error: "Key press not implemented"};
+    }
+
+    async listSupportedKeys(data) {
+        return {status: 501, error: "Not implemented"};
+    }
 
     /**
      * This operation provides a text string to be used for a simulated voice request. 
@@ -350,6 +362,10 @@ export class DabDeviceInterface {
         return {status: 501, error: "voice text intent not implemented"};
     }
 
+    async sendVoiceAudio(data) {
+        return {status: 501, error: "voice text intent not implemented"};
+    }
+
     /**
      * Long key press is an action that can be associated with an extended key press on the remote control.
      * A key code represents button name / function name typically found on the remote control device.
@@ -361,32 +377,6 @@ export class DabDeviceInterface {
      */
     async keyPressLong(data) {
         return {status: 501, error: "Long key press not implemented"};
-    }
-
-    /**
-     * Set the current device's system language.
-     * @abstract
-     * @param {Object} data - request object
-     * @param {string} data.language - rcf_5646_language_tag
-     * @returns {Promise<DabResponse>}
-     */
-    async setSystemLanguage(data) {
-        return {status: 501, error: "Set system language not implemented"};
-    }
-
-    /**
-     * @typedef {Object} GetSystemLanguageResponse
-     * @property {number} status - Response status code
-     * @property {string} [language] - rcf_5646_language_tag
-     */
-
-    /**
-     * Get the current device's system language.
-     * @abstract
-     * @returns {Promise<DabResponse|GetSystemLanguageResponse>}
-     */
-    async getSystemLanguage() {
-        return {status: 501, error: "Get system language not implemented"};
     }
 
     /**
@@ -462,5 +452,33 @@ export class DabDeviceInterface {
      */
     async discovery() {
         return {status: 501, error: "Health check not implemented"};
+    }
+
+    async launchWithContent(data) {
+        return {status: 501, error: "Not implemented."};
+    }
+
+    async getAppState(data) {
+        return {status: 501, error: "Not implemented."};
+    }
+
+    async listSystemSettings() {
+        return {status: 501, error: "Not implemented."};
+    }
+
+    async getSystemSettings() {
+        return {status: 501, error: "Not implemented."};
+    }
+
+    async setSystemSettings(data) {
+        return {status: 501, error: "Not implemented."};
+    }
+
+    async outputImage() {
+        return {status: 501, error: "Not implemented."};
+    }
+
+    async voiceList() {
+        return {status: 501, error: "Not implemented."};
     }
 }
