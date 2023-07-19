@@ -18,7 +18,7 @@ import  * as topics  from './interface/dab_topics.js';
 import { v4 as uuidv4 } from 'uuid';
 import { readFileSync } from 'fs';
 import {getLogger} from "./lib/util.js";
-import {SampleDabDevice} from "./partner/sample_dab_device.js";
+import {PartnerDabDevice} from "./partner/partner_dab_device.js";
 import config from 'config';
 const logger = getLogger();
 
@@ -116,10 +116,16 @@ export class DabBridge {
                 "Conflict in IP address provided. There is already an onboarded device with that IP.");
         }
 
-        let dabDeviceInstance = new SampleDabDevice(params.ip);
+        let dabDeviceInstance = null;
+        try {
+            dabDeviceInstance = new PartnerDabDevice(uuidv4(), params.ip);
+        } catch (err) {
+            return this.dabResponse(500, err.toString());
+        }
+
         await dabDeviceInstance.init(config.get("mqttBroker"));
         this.deviceMap.set(params.ip, dabDeviceInstance);
-        return {...this.dabResponse(), ...{deviceId: dabDeviceInstance.deviceId}};
+        return {...this.dabResponse(), ...{deviceId: dabDeviceInstance.dabDeviceID}};
     }
 
     removeDevice = async (params) => {
