@@ -82,7 +82,7 @@ export class DabClient {
 
     async setSettings(settings) {
         return await this.client.request(
-            topics.SYSTEM_SETTING_SET,
+            topics.SYSTEM_SETTING_SET_TOPIC,
             settings
         )
     }

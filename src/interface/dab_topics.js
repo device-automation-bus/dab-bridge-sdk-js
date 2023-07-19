@@ -20,12 +20,9 @@ export const APPLICATIONS_GET_STATE_TOPIC = "applications/get-state";
 export const APPLICATIONS_EXIT_TOPIC = "applications/exit";
 
 export const SYSTEM_RESTART_TOPIC = "system/restart";
-export const SYSTEM_LANGUAGE_LIST_TOPIC = "system/language/list";
-export const SYSTEM_LANGUAGE_GET_TOPIC = "system/language/get";
-export const SYSTEM_LANGUAGE_SET_TOPIC = "system/language/set";
 export const SYSTEM_SETTING_LIST_TOPIC = "system/settings/list";
-export const SYSTEM_SETTING_SET = "system/settings/set";
-export const SYSTEM_SETTING_GET = "system/settings/set";
+export const SYSTEM_SETTING_SET_TOPIC = "system/settings/set";
+export const SYSTEM_SETTING_GET_TOPIC = "system/settings/set";
 export const DEVICE_CAPTURE_IMAGE = "output/image";
 
 export const DEVICE_TELEMETRY_START_TOPIC = "device-telemetry/start";
