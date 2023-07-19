@@ -46,6 +46,7 @@ export class DabDeviceInterface {
         //Pre-Init Handler Registration
         await Promise.all(
             [
+                this.client.handle(`dab/${this.dabDeviceID}/${topics.LIST_SUPPORTED_DAB_OPERATIONS_TOPIC}`, this.listSupportedOperations),
                 this.client.handle(`dab/${this.dabDeviceID}/${topics.APPLICATIONS_LIST_TOPIC}`, this.listApps),
                 this.client.handle(`dab/${this.dabDeviceID}/${topics.APPLICATIONS_LAUNCH_TOPIC}`, this.launchApp),
                 this.client.handle(`dab/${this.dabDeviceID}/${topics.APPLICATIONS_LAUNCH_WITH_CONTENT_TOPIC}`, this.launchWithContent),
@@ -254,6 +255,10 @@ export class DabDeviceInterface {
 
     // TO BE IMPLEMENTED FOR DEVICE
     //-----------------------------
+
+    async listSupportedOperations() {
+        return {status: 501, error: "Device info not implemented"};
+    }
 
     /**
      * @typedef {Object} DeviceInformation

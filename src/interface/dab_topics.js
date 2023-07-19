@@ -13,6 +13,8 @@
  limitations under the License.
  */
 
+export const LIST_SUPPORTED_DAB_OPERATIONS_TOPIC = "operations/list";
+
 export const APPLICATIONS_LIST_TOPIC = "applications/list";
 export const APPLICATIONS_LAUNCH_TOPIC = "applications/launch";
 export const APPLICATIONS_LAUNCH_WITH_CONTENT_TOPIC = "applications/launch-with-content";
