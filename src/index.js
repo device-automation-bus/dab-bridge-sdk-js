@@ -47,7 +47,7 @@ function parseCLIParams() {
         )
         .helpOption("-h, --help", "Display help for command");
     let options = program.parse(process.argv).opts();
-    if (options.hasOwnProperty("brokerURI")) {
+    if (options.hasOwnProperty("bridgeID")) {
         bridgeID = options.bridgeID;
     } else {
         bridgeID = config.get("bridgeID");
