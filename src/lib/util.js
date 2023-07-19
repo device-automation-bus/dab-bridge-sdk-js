@@ -15,7 +15,7 @@
 
 import bunyan from 'bunyan';
 import {readFileSync} from 'fs';
-
+import {create, serializers} from "bunyan-debug-stream";
 export function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -27,19 +27,21 @@ export function getLogger() {
     const packageJson = JSON.parse(readFileSync('./package.json', 'utf8'));
     logger = bunyan.createLogger({
       name: packageJson.name,
-      version: packageJson.version,
       streams: [
         {
-          level: 'debug',
-          stream: process.stdout // log debug and above to stdout
+          level: 'trace',
+          type: 'raw',
+          stream: create({
+            forceColor: true
+          })
         },
         // {
         //   level: 'info',
         //   path: 'dab_adb_bridge.log' // log ERROR and above to a file
         // }
       ],
-      serializers: {err: bunyan.stdSerializers.err},
-      src: true
+      serializers: serializers,
+      src: false
     });
     // This removes the `v` field as its only needed by bunyan cli and useless to us.
     logger._emit = (rec, noemit) => {
