@@ -211,9 +211,10 @@ export class PartnerDabDevice extends DabDeviceInterface {
      * }
      */
     startDeviceTelemetry = async (data) => {
-        // DabDeviceInterface handles firing and reporting device telemetry on its own using startDeviceTelemetryImpl
-        // As a partner, you just need to implement the callback function and return data
         return await this.startDeviceTelemetryImpl(data, async () => {
+            // DabDeviceInterface handles firing and reporting device telemetry on its own using startDeviceTelemetryImpl
+            // As a partner, you just need to implement this callback function and return data
+            // This function will be invoked in regular intervals as per the request duration.
             return this.dabResponse(501, "Not implemented.");
         })
     };
