@@ -8,17 +8,41 @@ import {DabDeviceInterface} from "../interface/dab_device_interface.js";
  */
 export class PartnerDabDevice extends DabDeviceInterface {
 
+
     /**
+     * Given a deviceIP, this function MUST return true or false depending on if this implementation
+     * can handle DAB translation for this device IP. For example, you may check available native automation hooks,
+     * firmware, or other native configuration requirements for this DAB Bridge implementation to work with the target.
      *
-     * @param deviceIp IP Address of the DUT that this implementation must translate DAB requests for.
-     *                 You can assume that this IP address is reachable, but not that the device itself is in a healthy state.
+     * This function is static, and will be called during add-device, before the construction of the class as an instance.
+     *
+     * @param deviceIP The target IP address of the device the user wishes to start DAB bridging for.
+     */
+    static isCompatible(deviceIP){
+        // Do checks and return true if target deviceIP can be used for your DAB implementation.
+        // You may also throw errors, the bridge will catch these and use them as reasoning for why the add-device failed.
+
+        return false;
+    }
+
+    /**
+     * This constructor is called by the Bridge after isTargetDABCompatible() return true, but before any other DAB
+     * operation functions are invoked.
+     *
+     * You may use this opportunity to instantiate long-living connections, shared objects, or other properties needed
+     * to successfully execute the below DAB functions.
+     *
+     * @param deviceIP IP Address of the DUT that this implementation must translate DAB requests for.
+     *                 You can assume that this IP address is reachable.
      * @param dabDeviceId DAB Device ID that was generated for this specific object instance.
      *                    Used internally for topic subscription and routing.
      */
-    constructor(dabDeviceId, deviceIp) {
+    constructor(dabDeviceId, deviceIP) {
         super(dabDeviceId);
-        this.deviceIp = deviceIp; // Use for instantiating any websockets, connections, and other properties needed.
+        this.deviceIP = deviceIP; // Use for instantiating any websockets, connections, and other properties needed.
     }
+
+
 
     /**
      * type ListSupportedOperationRequest = DabRequest
@@ -218,7 +242,7 @@ export class PartnerDabDevice extends DabDeviceInterface {
      * @returns {Promise<{status: number}>}
      */
     discovery = async () => {
-        return this.dabResponse(200, {deviceId: this.dabDeviceID, deviceIp: this.deviceIp});
+        return this.dabResponse(200, {deviceId: this.dabDeviceID, deviceIP: this.deviceIP});
     }
 
     /**

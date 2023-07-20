@@ -264,6 +264,7 @@ class Client {
             msg,
             pkg.topic.substring(0, topic.lastIndexOf("/"))
           );
+          logger.debug(`Responding on topic ${responseTopic} with message ${JSON.stringify(resultMsg)}`);
           return this.publish(responseTopic, resultMsg, {properties: {correlationData: correlationData}});
         } catch (error) {
           const status = error.status || 500;
