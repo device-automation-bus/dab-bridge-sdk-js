@@ -15,7 +15,6 @@
     "bunyan": "^1.8.15",
     "bunyan-debug-stream": "^3.1.0",
     "commander": "^11.0.0",
-    "config": "^3.3.3",
     "eventemitter2": "^6.4.3",
     "play-sound": "^1.1.5",
     "promisify-child-process": "^4.1.1",

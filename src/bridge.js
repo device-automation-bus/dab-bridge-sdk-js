@@ -19,7 +19,6 @@ import { v4 as uuidv4 } from 'uuid';
 import { readFileSync } from 'fs';
 import {getLogger} from "./lib/util.js";
 import {PartnerDabDevice} from "./partner/partner_dab_device.js";
-import config from 'config';
 const logger = getLogger();
 
 /**
@@ -158,7 +157,7 @@ export class DabBridge {
             return this.dabResponse(500, err.toString());
         }
 
-        await dabDeviceInstance.init(config.get("mqttBroker"));
+        await dabDeviceInstance.init(this.mqttBrokerUri);
         this.deviceMap.set(params.ip, dabDeviceInstance);
         return {...this.dabResponse(), ...{deviceId: dabDeviceInstance.dabDeviceID}};
     }
