@@ -17,6 +17,10 @@ The MQTT5 request-response model, parsing parameters, routing to appropriate fil
 
 The partner specific implementation component is located under `src/partner/`. A sample `PartnerDabDevice` implementation has been started for you.
 
+Here is a brief visualization of how the bridge works end-to-end. Details can be found in comments throughout the source code.
+
+![](test/bridge_lifecycle_diagram.png)
+
 ## Implementation Steps
 
 1. Fork or clone this repository
