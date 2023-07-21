@@ -68,8 +68,10 @@ export class DabDeviceInterface {
                 this.client.handle(`dab/${this.dabDeviceID}/${topics.HEALTH_CHECK_TOPIC}`, this.healthCheck),
                 this.client.handle(`dab/${topics.DISCOVERY}`, this.discovery),
                 this.client.handle(`dab/${this.dabDeviceID}/${topics.VOICE_LIST_TOPIC}`, this.voiceList),
+                this.client.handle(`dab/${this.dabDeviceID}/${topics.VOICE_SET_TOPIC}`, this.voiceSet),
                 this.client.handle(`dab/${this.dabDeviceID}/${topics.SEND_TEXT_TO_VOICE_SYSTEM_TOPIC}`, this.sendVoiceText),
-                this.client.handle(`dab/${this.dabDeviceID}/${topics.SEND_AUDIO_TO_VOICE_SYSTEM_TOPIC}`, this.sendVoiceAudio)
+                this.client.handle(`dab/${this.dabDeviceID}/${topics.SEND_AUDIO_TO_VOICE_SYSTEM_TOPIC}`, this.sendVoiceAudio),
+                this.client.handle(`dab/${this.dabDeviceID}/${topics.DAB_VERSION_TOPIC}`, this.version)
             ]
         );
 
@@ -79,8 +81,8 @@ export class DabDeviceInterface {
         //Post-Init publishing of retained messages and inital notifications
         await Promise.all(
             [
-                this.client.publishRetained(topics.DAB_VERSION_TOPIC, this.version()),
-                this.client.publishRetained(topics.DEVICE_INFO_TOPIC, await this.deviceInfo()),
+                // this.client.publishRetained(`dab/${this.dabDeviceID}/${topics.DAB_VERSION_TOPIC}`, this.version()),
+                // this.client.publishRetained(`dab/${this.dabDeviceID}/${topics.DEVICE_INFO_TOPIC}`, await this.deviceInfo()),
                 this.notify("info", "DAB service is online")
             ]
         );
@@ -95,8 +97,8 @@ export class DabDeviceInterface {
         await Promise.all(
             [
                 this.notify("warn", "DAB service is shutting down"),
-                this.client.clearRetained(topics.DEVICE_INFO_TOPIC),
-                this.client.clearRetained(topics.DAB_VERSION_TOPIC)
+                // this.client.clearRetained(`dab/${this.dabDeviceID}/${topics.DEVICE_INFO_TOPIC}`),
+                // this.client.clearRetained(`dab/${this.dabDeviceID}/${topics.DAB_VERSION_TOPIC}`)
             ]
         );
 
@@ -115,15 +117,8 @@ export class DabDeviceInterface {
             });
     }
 
-    /**
-     * Publish as retained message to version topic the major version and the minor
-     * version delimited by a full stop character . Major and minor versions are
-     * non-negative integers.
-     */
     version() {
-        const packageVersion = JSON.parse(readFileSync('./package.json', 'utf8')).version;
-        const dabVersion = packageVersion.substring(packageVersion, packageVersion.lastIndexOf(".")); // remove patch version
-        return { status: 200, versions: [dabVersion] };
+        return {status: 200, versions: ["2.0"]};
     }
 
     /**
@@ -486,6 +481,10 @@ export class DabDeviceInterface {
     }
 
     async voiceList() {
+        return {status: 501, error: "Not implemented."};
+    }
+
+    async voiceSet(data) {
         return {status: 501, error: "Not implemented."};
     }
 }

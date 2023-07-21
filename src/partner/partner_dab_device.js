@@ -223,6 +223,19 @@ export class PartnerDabDevice extends DabDeviceInterface {
 
     /**
      *
+     * @param data interface SetVoiceSystemRequest extends DabRequest {
+     *    voiceSystem: VoiceSystem;
+     * }
+     * @returns interface SetVoiceSystemResponse extends DabResponse {
+     *    voiceSystem: VoiceSystem;
+     * }
+     */
+    voiceSet = async (data) => {
+        return this.dabResponse(501, "Not implemented.");
+    }
+
+    /**
+     *
      * @param data interface StartDeviceTelemetryRequest extends DabRequest {
      *    duration: number;
      * }

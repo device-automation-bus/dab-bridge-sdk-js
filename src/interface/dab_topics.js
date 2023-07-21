@@ -24,7 +24,7 @@ export const APPLICATIONS_EXIT_TOPIC = "applications/exit";
 export const SYSTEM_RESTART_TOPIC = "system/restart";
 export const SYSTEM_SETTING_LIST_TOPIC = "system/settings/list";
 export const SYSTEM_SETTING_SET_TOPIC = "system/settings/set";
-export const SYSTEM_SETTING_GET_TOPIC = "system/settings/set";
+export const SYSTEM_SETTING_GET_TOPIC = "system/settings/get";
 export const DEVICE_CAPTURE_IMAGE = "output/image";
 
 export const DEVICE_TELEMETRY_START_TOPIC = "device-telemetry/start";
@@ -48,6 +48,7 @@ export const DAB_MESSAGES = "messages";
 export const DISCOVERY = "discovery";
 
 export const VOICE_LIST_TOPIC = "voice/list";
+export const VOICE_SET_TOPIC = "voice/set";
 export const SEND_TEXT_TO_VOICE_SYSTEM_TOPIC = "voice/send-text";
 export const SEND_AUDIO_TO_VOICE_SYSTEM_TOPIC = "voice/send-audio";
 

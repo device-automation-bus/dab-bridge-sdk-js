@@ -132,7 +132,8 @@ export class DabBridge {
     /**
      *
      * @param params.ip IP address for the device we would like to onboard into the Bridge for DAB Translation
-     * @param params.skipValidation Skip compatibility checks and directly
+     * @param params.skipValidation Dev param to skip compatibility checks and directly onboard.
+     * @param params.dabDeviceId Dev param to force a specific deviceId to use during onboarding. Careful about overlaps!
      * @returns dabResponse -- {status, !error}
      */
     addDevice = async (params) => {
@@ -152,7 +153,8 @@ export class DabBridge {
                     "This target device cannot be bridged by this implementation. " +
                     "isTargetDABCompatible() returned false.");
 
-            dabDeviceInstance = new PartnerDabDevice(uuidv4(), params.ip);
+            let dabDeviceId = params.dabDeviceId ? params.dabDeviceId : uuidv4();
+            dabDeviceInstance = new PartnerDabDevice(dabDeviceId, params.ip);
         } catch (err) {
             return this.dabResponse(500, err.toString());
         }
