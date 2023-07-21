@@ -1,173 +1,204 @@
-const { default: request } = require("sync-request");
-const Ajv = require("ajv");
+/**
+ Copyright 2023 Amazon.com, Inc. or its affiliates.
+ Copyright 2023 Netflix Inc.
+ Copyright 2023 Google LLC
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+ http://www.apache.org/licenses/LICENSE-2.0
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+ */
 
-const JS_BRIDGE_MAJOR_VERSION = 0,
-    JS_BRIDGE_MINOR_VERSION = 1,
-    JS_BRIDGE_PATCH_VERSION = 0;
+import { MqttClient } from './lib/mqtt_client/index.js';
+import  * as topics  from './interface/dab_topics.js';
+import { v4 as uuidv4 } from 'uuid';
+import { readFileSync } from 'fs';
+import {getLogger} from "./lib/util.js";
+import {PartnerDabDevice} from "./partner/partner_dab_device.js";
+const logger = getLogger();
 
-class DabBridge {
-  constructor(bridgeID, device) {
-    this.target = device;
-    this.bridgeID = bridgeID;
-    this.deviceCounter = 0;
-    // Create a device table
-    this.deviceTable = new DeviceTable();
-  }
+/**
+ * The DabBridge class is responsible for managing multiple instances of the partner DAB Bridge implementations.
+ *
+ * It supports key bridge-specific operations like add-device, remove-device, and list-device, that are used
+ * by automation for device onboarding and management.
+ **
+ * It shields details of having multiple DAB Devices being translated in a single bridge instance
+ * from partner implementations.
+ */
+export class DabBridge {
 
-  async processMqttMessage(topic, message, mqttClient) {
-    // Get topic structure
-    const topicStructure = Array.from(topic.split("/"));
-    // Get the messageRoute from the topic
-    const messageRoute = topicStructure[1];
-    // Get the params from the message
-    console.log(message);
-    // Check if this is a operation for a bridge. If not, check if this is a operation for a device
+    /**
+     * DabBridge constructor is called at the beginning of the program. If a user decides give a bridgeID,
+     * it will use dab/bridge/<bridge-id> as the prefix for all bridge specific operations. For example, if bridgeID was
+     * "roku", one available bridge API topic would be dab/bridge/roku/add-device.
+     * @param bridgeID The ID used to represent this bridge in the MQTT ecosystem.
+     *                  If not provided, a random uuid will be generated instead.
+     */
+    constructor(bridgeID) {
+        logger.info("Constructing DabBridge with BridgeID=" + bridgeID);
+        if (bridgeID) {
+            this.bridgeID = bridgeID;
+        } else {
+            this.bridgeID = uuidv4();
+        }
+        this.deviceMap = new Map(); // key: deviceIP, value: DabDevice object / instance
+    }
 
-    // TODO fix this design, MQTT routes shouldn't be broadly subscribed to and processed like this.
-    switch (messageRoute) {
-      case "bridge":
-        return await this.handleBridgeRoute(topic, message, mqttClient);
-      case "discovery": // Unique route that requires the bridge to take action for all devices it is managing
-        let discoveryResponses = [];
+    /**
+     * Init to be called once at application startup, unless following stop. This is where we use the bridgeID to
+     * subscribe to all the bridge-specific MQTT topics for device management.
+     */
+    async init(uri) {
+        this.mqttBrokerUri = uri; // store URI to use for DabDevice init as well
+        this.client = new MqttClient();
 
-        for (const [entryDeviceID, entryIP] of this.deviceTable.getAllDevices()) {
-          console.log(entryDeviceID + " " + entryIP);
-          discoveryResponses.push({"status": 200, "deviceId": entryDeviceID, "ip": entryIP});
+        //Pre-Init Handler Registration
+        await Promise.all(
+            [
+                this.client.handle(`dab/bridge/${this.bridgeID}/${topics.BRIDGE_ADD_DEVICE}`, this.addDevice),
+                this.client.handle(`dab/bridge/${this.bridgeID}/${topics.BRIDGE_REMOVE_DEVICE}`, this.removeDevice),
+                this.client.handle(`dab/bridge/${this.bridgeID}/${topics.BRIDGE_LIST_DEVICES}`, this.listDevices),
+            ]
+        );
+
+        //Start MQTT Client
+        await this.client.init(uri);
+
+        //Post-Init publishing of retained messages and inital notifications
+        await Promise.all(
+            [
+                this.client.publishRetained(`dab/bridge/${this.bridgeID}/${topics.BRIDGE_VERSION}`, this.version()),
+                this.notify("info", `DAB Bridge ${this.bridgeID} is online!`)
+            ]
+        );
+
+        logger.info("Initialized DAB Bridge and subscribed to Bridge routes.");
+
+        return this.client;
+    }
+
+    /**
+     * Cleanly shuts down the MQTT client, clearing retained messages for version and device info
+     */
+    async stop() {
+        // Call stop on all devices
+        for (let [deviceIP, dabDeviceInstance] of this.deviceMap) {
+            logger.info(`Shutting down DabDevice with IP ${deviceIP}.`);
+            await dabDeviceInstance.stop();
         }
 
-        return discoveryResponses;// Get the operation from the topic
-        break;
 
-      default: // Regular DAB operation to translate with partner implementation
-        let dabOperation = topicStructure.slice(2, topicStructure.length).join("/");
-        let params = JSON.parse(message.toString());
-        return await this.processDabOperation(this.deviceTable.getIp(messageRoute), dabOperation, params);
-        break;
+        await Promise.all(
+            [
+                this.notify("warn", `DAB Bridge ${this.bridgeID} has gone offline.`),
+                this.client.clearRetained(`dab/bridge/${this.bridgeID}/${topics.BRIDGE_VERSION}`)
+            ]
+        );
+
+        return await this.client.stop();
     }
 
-    return null;
-  }
-
-  async handleBridgeRoute(topic, message, mqttClient){
-
-    const topicStructure = Array.from(topic.split("/"));
-    console.log("Received message from topic -- " + topic)
-    const params = JSON.parse(message.toString());
-
-    // This is an operation for a bridge. Check if this is a operator for this bridge instance
-    let targetBridge = topicStructure[2];
-    if (targetBridge === this.bridgeID) {
-      // Get the operation from the topic
-      let bridgeOperation = topicStructure[3];
-      switch (bridgeOperation) {
-        case "add-device": // Perform a health check using partner implementation before adding device
-          if (params.skipValidation !== true) {
-            let healthCheckResponse = await this.processDabOperation(params.ip, "health-check/get", {});
-            if (healthCheckResponse.status !== 200) return {
-              "status": 400,
-              "error": "Partner device health check failed."
-            };
-          }
-          // Implements dab/bridge/<bridgeID>/add-device operation
-          if (!this.deviceTable.isIpAdded(params.ip)) {
-            let newDeviceID = "device" + this.deviceCounter;
-            this.deviceCounter++;
-            this.deviceTable.addDevice(newDeviceID, params.ip);
-            // Subscribe to messages for this device ID
-            mqttClient.subscribe(`dab/${newDeviceID}/#`, {qos: 1});
-            console.log(`Subscribed to the topic: dab/${newDeviceID}/#`);
-            return {"status": 200, "deviceId": `${newDeviceID}`};
-          } else {
-            return {"status": 400, "error": "IP already added"};
-          }
-          break;
-
-        case "remove-device": // Implements dab/bridge/<bridgeID>/remove-device operation
-          if (!this.deviceTable.removeDeviceWithIP(params.ip)) {
-            return {"status": 400, "error": `The requested device ${params.ip} is not recorded in the bridge.`};
-          } else {
-            return {"status": 200};
-          }
-          break;
-
-        case "list-devices": // Implements dab/bridge/<bridgeID>/list-devices operation
-          return {"status": 200, "devices": this.deviceTable.getAllDevices()};
-          break;
-
-        case "version":
-          return {"status": 200, "version": `${JS_BRIDGE_MAJOR_VERSION}.${JS_BRIDGE_MINOR_VERSION}.${JS_BRIDGE_PATCH_VERSION}`};
-          break;
-
-        default:
-          return {"status": 501, "error": "The requested functionality is not implemented."};
-      }
+    /**
+     * Publishes generic notifications to the message topic
+     */
+    async notify(level, message) {
+        return await this.client.publishRetained(`dab/bridge/${this.bridgeID}/${topics.DAB_MESSAGES}`,
+            {
+                timestamp: new Date().toISOString(),
+                level: level,
+                message: message
+            });
     }
 
-    return null;
-  }
-
-  async processDabOperation(deviceIp, dabOperation, params) {
-    let structMap = require("./structsMap.js");
-    if(!structMap[dabOperation]){
-      console.log("Ignoring unsupported DAB operation --> " + dabOperation);
-      // TODO: This trick for not responding to unknown DAB operations will be removed
-      // TODO: once the current MQTT listener architecture is re-designed and fixed
-      return null;
+    /**
+     * @typedef {Object} DabResponse
+     * @property {number} status - Response status code
+     * @property {string} [error] - Error message if non 2XX response returned
+     */
+    dabResponse(status = 200, error) {
+        const response = {status: status};
+        if (Math.floor(status / 100) !== 2) {
+            if (!error) throw new Error("Error message must be returned for non 2XX status results");
+            response.error = error;
+        }
+        return response;
     }
 
-    let structFile = structMap[dabOperation];
-    let dabStruct = require(structFile);
+    /**
+     *
+     * @param params.ip IP address for the device we would like to onboard into the Bridge for DAB Translation
+     * @param params.skipValidation Dev param to skip compatibility checks and directly onboard.
+     * @param params.dabDeviceId Dev param to force a specific deviceId to use during onboarding. Careful about overlaps!
+     * @returns dabResponse -- {status, !error}
+     */
+    addDevice = async (params) => {
+        if(!params.ip) return this.dabResponse(400, "IP address of device to add was not included.");
 
-    // const ajv = new Ajv();
+        logger.debug("DeviceMap:", JSON.stringify(this.deviceMap));
 
-    // const validate = ajv.compile(dabStruct);
+        if(this.deviceMap.has(params.ip)){
+            return this.dabResponse(409,
+                "Conflict in IP address provided. There is already an onboarded device with that IP.");
+        }
 
-    // if (!validate(params)) {
-    // 	return { "status": 500, "error": validate.errors };
-    // }
+        let dabDeviceInstance = null;
+        try {
+            if(!params.skipValidation && !PartnerDabDevice.isCompatible(params.ip))
+                return this.dabResponse(500,
+                    "This target device cannot be bridged by this implementation. " +
+                    "isTargetDABCompatible() returned false.");
 
-    const interfacePath = "./device/" + this.target + "/interface.js";
-    const functionMap = require(interfacePath);
-    const functionPath =
-      "./device/" + this.target + "/" + functionMap[dabOperation];
-    const functionProcess = require(functionPath);
-    return await functionProcess(deviceIp, params);
-  }
+            let dabDeviceId = params.dabDeviceId ? params.dabDeviceId : uuidv4();
+            dabDeviceInstance = new PartnerDabDevice(dabDeviceId, params.ip);
+        } catch (err) {
+            return this.dabResponse(500, err.toString());
+        }
+
+        await dabDeviceInstance.init(this.mqttBrokerUri);
+        this.deviceMap.set(params.ip, dabDeviceInstance);
+        return {...this.dabResponse(), ...{deviceId: dabDeviceInstance.dabDeviceID}};
+    }
+
+    /**
+     *
+     * @param params The device IP Address we would like to remove from Bridge management and DAB translation
+     * @returns dabResponse -- {status, !error}
+     */
+    removeDevice = async (params) => {
+        if(!params.ip) return this.dabResponse(400, "IP address of device to remove was not included.");
+
+        logger.debug(JSON.stringify(this.deviceMap));
+
+        if(!this.deviceMap.has(params.ip)){
+            return this.dabResponse(412,
+                "Precondition failed -- IP address provided was not found in deviceMap for this bridge.");
+        }
+
+        this.deviceMap.get(params.ip).stop(); // Stop the device MQTT client and clear any messages
+        this.deviceMap.delete(params.ip); // Delete entry from deviceMap
+        return this.dabResponse();
+    }
+
+    /**
+     *
+     * @returns List of entries, each containing the DAB Device ID and its associated IP address for an onboarded device.
+     */
+    listDevices = async (params) => {
+        let deviceArray = [];
+        this.deviceMap.forEach((value, key, map) => {
+            deviceArray.push({ip: key, deviceId: value.deviceId});
+        })
+        return {...this.dabResponse(), ...{deviceList: deviceArray}};
+    }
+
+    version(){
+        const packageVersion = JSON.parse(readFileSync('./package.json', 'utf8')).version;
+        return { ...this.dabResponse(), ...{version: packageVersion} };
+    }
+
 }
-
-class DeviceTable {
-  constructor() {
-    this.map = {};
-  }
-  // Add a device-IP pair to the table
-  addDevice = (deviceId, IP) => (this.map[deviceId] = IP);
-  // Get the IP associated with a device
-  getIp = (deviceId) => this.map[deviceId];
-  // Check if the table contains a device by its ip
-  isIpAdded = (ip) => {
-    for (const key in this.map) {
-      if (this.map[key] === ip) {
-        return true;
-      }
-    }
-    return false;
-  };
-  // Check if the table contains a device by its name
-  isDeviceAdded = (deviceId) => deviceId in this.map;
-
-  // Removes a device-IP pair from the table
-  removeDeviceWithIP = (IP) => {
-    let targetDeviceId = null;
-    for (const deviceId in this.map) {
-      if (this.map[deviceId] === IP) {
-        delete this.map[deviceId]; // Remove current property
-        return true;
-      }
-    }
-    return false;
-  }
-  // Get all the entries in the table
-  getAllDevices = () => Object.entries(this.map);
-}
-
-module.exports = DabBridge;

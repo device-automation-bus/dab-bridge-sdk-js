@@ -1,7 +1,4 @@
-# This workflow will do a clean installation of node dependencies, cache/restore them, build the source code and run tests across different versions of node
-# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-nodejs
-
-name: Bridge Node Test CI
+name: Compliance Test CI / CD
 
 on:
   push:
@@ -12,12 +9,11 @@ on:
 jobs:
   build:
 
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
 
     strategy:
       matrix:
-        node-version: [14.x, 16.x, 18.x]
-        # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
+        node-version: [16.x]
 
     steps:
       - uses: actions/checkout@v3
@@ -25,5 +21,31 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node-version }}
-      - run: npm install
-      - run: npm test
+
+      - name: Install Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Setup Mosquitto Broker
+        run: |
+          sudo apt-add-repository ppa:mosquitto-dev/mosquitto-ppa -y
+          sudo apt-get update -y
+          sudo apt install -y mosquitto mosquitto-clients
+          mosquitto &
+          sleep 5
+
+      - name: Clone Compliance Test and Install Dependencies
+        run: |
+          git clone https://github.com/device-automation-bus/dab-compliance-suite.git
+          pip install -r dab-compliance-suite/requirements.txt
+          npm install
+
+      - name: Run Bridge and Onboard Device
+        run: |
+          node src/index.js &
+          sleep 3
+          mosquitto_pub -t dab/bridge/template/add-device -m '{ "skipValidation": true, "ip": "sample-ip.com", "dabDeviceId": "custom-dab-device-id"}' -D publish response-topic "my/response/topic"
+          timeout 30 python dab-compliance-suite/main.py --output test/ci_cd_compliance_result.json -I custom-dab-device-id -b 127.0.0.1
+
+      - run: node test/simple_json_compare.cjs test/ci_cd_compliance_result.json test/expected_compliance_result.json logs

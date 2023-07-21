@@ -1,104 +1,64 @@
-const { Command } = require("commander");
-const crypto = require("crypto");
-const mqtt = require("mqtt");
+import {Command} from "commander";
+import {DabBridge} from "./bridge.js";
 
-function main() {
-  console.log("DAB Bridge");
+let bridgeID, brokerURI;
+parseCLIParams();
 
-  // Parse command line arguments using Commander
-  const program = new Command();
-  program
-    .option("-t, --target <string>", " Example: -t template")
-    .option(
-      "-i, --bridgeID <string>",
-      "(Optional) The bridge-id on the network. Generates a random bridge-id string if blank. Example: -i myBridge0"
-    )
-    .option(
-      "-b, --brokerIP <string>",
-      "(Optional) The IP address of the MQTT broker. Defaults to mqtt://localhost if blank. Example: -b 192.168.0.123"
-    )
-    .helpOption("-h, --help", "Display help for command");
-  let options = program.parse(process.argv).opts();
-  let bridgeID, target, brokerIP;
-  if (options.hasOwnProperty("bridgeID")) {
+const dabBridge = new DabBridge(bridgeID);
+await dabBridge.init(brokerURI);
+
+/**
+ * Handle Node termination cleanly
+ */
+process.on("SIGTERM", async () => {
+    console.log("Caught SIGTERM...");
+    await dabBridge.stop();
+    process.exit(0);
+});
+
+// catch ctrl+c event and exit normally
+process.on("SIGINT", async () => {
+    console.log("Caught SIGTINT...");
+    await dabBridge.stop();
+    process.exit(0);
+});
+
+//catch uncaught exceptions, trace, then exit normally
+process.on("uncaughtException", async (e) => {
+    console.log("Uncaught Exception...");
+    console.log(e.stack);
+    await dabBridge.stop();
+    process.exit(0);
+});
+
+function parseCLIParams() {
+    // Parse command line arguments using Commander
+    const program = new Command();
+
+    program
+        .option(
+            "-i, --bridgeID <string>",
+            "The bridge-id on the network. Generates a random bridge-id string if unspecified. " +
+            "Example: -i myPartnerBridgeName | (Optional)",
+            "template"
+        )
+        .option(
+            "-b, --brokerURI <string>",
+            "The URI of the MQTT broker. " +
+            "Defaults to mqtt://localhost:1883 if unspecified. Example: -b http://192.168.1.123 (Optional)",
+            "mqtt://127.0.0.1:1883"
+        )
+        .helpOption("-h, --help", "Display help for command");
+    let options = program.parse(process.argv).opts();
     bridgeID = options.bridgeID;
-  } else {
-    console.log("Bridge ID not specified. Generating a random bridge ID.");
-    bridgeID = options.bridgeID || crypto.randomBytes(5).toString("hex");
-  }
-  // Get the target from the command line. Default is template
-  if (options.hasOwnProperty("target")) {
-    target = options.target;
-  } else {
-    console.log("Target not specified. Defaulting to template.");
-    target = "template";
-  }
-  // Get the broker IP from the command line. Default is localhost
-  if (options.hasOwnProperty("brokerIP")) {
-    brokerIP = options.brokerIP;
-  } else {
-    console.log("Broker IP not specified. Defaulting to localhost.");
-    brokerIP = "localhost";
-  }
+    brokerURI = options.brokerURI;
 
-  console.log(`Bridge ID: ${bridgeID}`);
-  console.log(`Target: ${target}`);
-  console.log(`Broker IP: ${brokerIP}`);
+    if (!options.hasOwnProperty("bridgeID"))
+        console.log(`Bridge ID not specified. Defaulting to ${bridgeID}`);
 
-  DabBridge = require("./bridge.js");
+    if (!options.hasOwnProperty("brokerURI"))
+        console.log(`Broker URI not specified. Defaulting to ${brokerURI}.`);
 
-  // Connect to the MQTT broker
-  this.mqttClient = mqtt.connect("mqtt://" + brokerIP, { protocolVersion: 5 });
-  // Subscribe to all topics starting with dab/bridge and dab/discovery
-  this.mqttClient.subscribe("dab/bridge/#", { qos: 1 });
-  this.mqttClient.subscribe("dab/discovery", { qos: 1 });
-  // Handle incoming messages
-  this.mqttClient.on("message", async (topic, message, packet) => {
-    console.log("\nReceived MQTT Message:");
-    console.log(`Topic: ${topic}`);
-    console.log(`Message: ${JSON.stringify(message)}`);
-    console.log(`Packet: ${JSON.stringify(packet)}`);
-
-    // Process the incoming message and wait for the response
-    // Get ResponseTopic property
-    const responseTopic = packet.properties.responseTopic;
-    // Get correlationData property
-    const correlationData = packet.properties.correlationData;
-
-    let response = await bridge.processMqttMessage(topic, message, this.mqttClient);
-
-    if(response === null){ // TODO, this categorization won't be required once we stop subscribing with wildcards
-      console.log("No response warranted from this bridge (null). Ignoring request.");
-      return;
-    }
-    // No response to this message was warranted. When the listener design refactor is dropped this won't be necessary.
-
-    console.log("\nPublishing Response:");
-    console.log(`Topic: ${JSON.stringify(responseTopic)}`);
-    console.log(`Correlation Data: ${JSON.stringify({ properties: { correlationData }})}`);
-
-    // Check if the response is an array or an individual entity
-    if (Array.isArray(response)) {
-      for (let responseIndex in response) {
-        console.log(`Message: ${JSON.stringify(response[responseIndex])}`);
-        this.mqttClient.publish(
-          responseTopic,
-          JSON.stringify(response[responseIndex]),
-          JSON.stringify({ properties: { correlationData } })
-        );
-      }
-    } else {
-      console.log(`Message: ${JSON.stringify(response)}`);
-      this.mqttClient.publish(
-        responseTopic,
-        JSON.stringify(response),
-        JSON.stringify({ properties: { correlationData } })
-      );
-    }
-  });
-
-  let bridge = new DabBridge(bridgeID, target, brokerIP);
+    console.log(`Bridge ID: ${bridgeID}`);
+    console.log(`MQTT Broker URI: ${brokerURI}`);
 }
-
-// Call the main function to execute your code
-main();
