@@ -1,6 +1,6 @@
-# DAB Bridge SDK
+# Device Automation Bus Bridge SDK
 
-This project is a reference template that can be used to develop a DAB Bridge that is compliant with the DAB specification.
+This project is a reference template that can be used to develop a DAB Bridge that is compliant with the DAB 2.0 specification.
 
 More details on the general usage for DAB Bridges can be found in the DAB User Guide.
 
