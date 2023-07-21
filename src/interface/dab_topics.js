@@ -29,11 +29,11 @@ export const DEVICE_CAPTURE_IMAGE = "output/image";
 
 export const DEVICE_TELEMETRY_START_TOPIC = "device-telemetry/start";
 export const DEVICE_TELEMETRY_STOP_TOPIC = "device-telemetry/stop";
+export const DEVICE_TELEMETRY_METRICS_TOPIC = "device-telemetry/metrics";
 
 export const APP_TELEMETRY_START_TOPIC = "app-telemetry/start";
 export const APP_TELEMETRY_STOP_TOPIC = "app-telemetry/stop";
-
-export const TELEMETRY_METRICS_TOPIC = "device-telemetry/metrics";
+export const APP_TELEMETRY_METRICS_TOPIC = "app-telemetry/metrics";
 
 export const INPUT_KEY_PRESS_TOPIC = "input/key-press";
 export const INPUT_KEY_LIST_TOPIC = "input/key/list";

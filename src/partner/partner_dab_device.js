@@ -185,18 +185,38 @@ export class PartnerDabDevice extends DabDeviceInterface {
 
     /**
      *
-     * @param data
-     * @returns {Promise<{status: number}>}
+     * @param data interface SendVoiceAsTextRequest extends DabRequest {
+     *    requestText: string;
+     *    voiceSystem: string;
+     * }
+     * @returns type SendVoiceAsTextResponse = DabResponse
      */
     sendVoiceText = async (data) => {
         return this.dabResponse(501, "Not implemented.");
     }
 
-
+    /**
+     *
+     * @param data interface SendVoiceAsAudioRequest extends DabRequest {
+     *    fileLocation: url;
+     *    voiceSystem?: string;
+     * }
+     * @returns type SendVoiceAsAudioResponse = DabResponse
+     */
     sendVoiceAudio = async (data) => {
         return this.dabResponse(501, "Not implemented.");
     }
 
+    /**
+     * type ListSupportedVoiceSystemsRequest = DabRequest
+     * interface VoiceSystem {
+     *    name: string;
+     *    enabled: boolean;
+     * }
+     * @returns interface ListSupportedVoiceSystemsResponse extends DabResponse {
+     *    voiceSystems: VoiceSystem [];
+     * }
+     */
     voiceList = async () => {
         return this.dabResponse(501, "Not implemented.");
     }
@@ -220,11 +240,44 @@ export class PartnerDabDevice extends DabDeviceInterface {
     };
 
     /**
+     * Already implemented on partner behalf, no action needed.
+     *
      * interface StopDeviceTelemetryRequest extends DabRequest
      * @returns type StopDeviceTelemetryResponse = DabResponse
      */
     stopDeviceTelemetry = async () => {
         return await this.stopDeviceTelemetryImpl();
+    };
+
+    /**
+     *
+     * @param data interface StartApplicationTelemetryRequest extends DabRequest {
+     *    appId: string;
+     *    duration: number;
+     * }
+     * @returns interface StartApplicationTelemetryResponse extends DabResponse {
+     *    duration: number;
+     * }
+     */
+    startAppTelemetry = async (data) => {
+        return await this.startAppTelemetryImpl(data, async () => {
+            // DabDeviceInterface handles firing and reporting app telemetry on its own using startAppTelemetryImpl
+            // As a partner, you just need to implement this callback function and return data
+            // This function will be invoked in regular intervals as per the request duration.
+            return this.dabResponse(501, "Not implemented.");
+        })
+    };
+
+    /**
+     * Already implemented on partner behalf, no action needed.
+     *
+     * @param data interface StopApplicationTelemetryRequest extends DabRequest {
+     *    appId: string;
+     * }
+     * @returns type StopApplicationTelemetryResponse = DabResponse
+     */
+    stopAppTelemetry = async (data) => {
+        return await this.stopAppTelemetryImpl(data);
     };
 
     /**
@@ -301,10 +354,9 @@ export class PartnerDabDevice extends DabDeviceInterface {
     }
 
     /**
-     * interface SetSystemSettingsRequest extends DabRequest {
+     * @param data interface SetSystemSettingsRequest extends DabRequest {
      *    [system_setting_key: keyof SystemSettings]: [value: any];
      * }
-     * @param data
      * @returns
      * interface SetSystemSettingsResponse extends DabResponse {
      *    [system_setting_key: keyof SystemSettings]: [value: any];

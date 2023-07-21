@@ -55,6 +55,7 @@ export class DabBridge {
      * subscribe to all the bridge-specific MQTT topics for device management.
      */
     async init(uri) {
+        this.mqttBrokerUri = uri; // store URI to use for DabDevice init as well
         this.client = new MqttClient();
 
         //Pre-Init Handler Registration

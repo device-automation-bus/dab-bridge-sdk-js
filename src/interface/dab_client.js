@@ -38,7 +38,7 @@ export class DabClient {
 
     async showDeviceTelemetry() {
         this.deviceTelemetrySub = await this.client.subscribe(
-            topics.TELEMETRY_METRICS_TOPIC, async (message) => {
+            topics.DEVICE_TELEMETRY_METRICS_TOPIC, async (message) => {
                 console.log(`Device telemetry: ${JSON.stringify(message, null, 2)}\n`);
             }
         );
@@ -50,7 +50,7 @@ export class DabClient {
 
     async showAppTelemetry() {
         this.appTelemetrySub = await this.client.subscribe(
-            `topics.TELEMETRY_METRICS_TOPIC/+`, async (message) => {
+            topics.APP_TELEMETRY_METRICS_TOPIC, async (message) => {
                 console.log(`App telemetry: ${JSON.stringify(message, null, 2)}\n`);
             }
         );

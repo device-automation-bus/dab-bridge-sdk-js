@@ -1,4 +1,3 @@
-import config from 'config';
 import {Command} from "commander";
 import {DabBridge} from "./bridge.js";
 
@@ -39,28 +38,26 @@ function parseCLIParams() {
     program
         .option(
             "-i, --bridgeID <string>",
-            "The bridge-id on the network. Generates a random bridge-id string if unspecified. Example: -i myPartnerBridgeName | (Optional)"
+            "The bridge-id on the network. Generates a random bridge-id string if unspecified. " +
+            "Example: -i myPartnerBridgeName | (Optional)",
+            "template"
         )
         .option(
             "-b, --brokerURI <string>",
-            "The URI of the MQTT broker. Defaults to mqtt://localhost:1883 if unspecified. Example: -b http://192.168.1.123 (Optional)"
+            "The URI of the MQTT broker. " +
+            "Defaults to mqtt://localhost:1883 if unspecified. Example: -b http://192.168.1.123 (Optional)",
+            "mqtt://127.0.0.1:1883"
         )
         .helpOption("-h, --help", "Display help for command");
     let options = program.parse(process.argv).opts();
-    if (options.hasOwnProperty("bridgeID")) {
-        bridgeID = options.bridgeID;
-    } else {
-        bridgeID = config.get("bridgeID");
-        console.log(`Bridge ID not specified. Defaulting to ${bridgeID}`);
-    }
+    bridgeID = options.bridgeID;
+    brokerURI = options.brokerURI;
 
-    // Get the MQTT Broker URI from the command line. Default is localhost
-    if (options.hasOwnProperty("brokerURI")) {
-        brokerURI = options.brokerURI;
-    } else {
-        brokerURI = config.get("mqttBroker")
+    if (!options.hasOwnProperty("bridgeID"))
+        console.log(`Bridge ID not specified. Defaulting to ${bridgeID}`);
+
+    if (!options.hasOwnProperty("brokerURI"))
         console.log(`Broker URI not specified. Defaulting to ${brokerURI}.`);
-    }
 
     console.log(`Bridge ID: ${bridgeID}`);
     console.log(`MQTT Broker URI: ${brokerURI}`);

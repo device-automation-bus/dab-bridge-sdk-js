@@ -170,12 +170,12 @@ export class DabDeviceInterface {
         if (this.telemetry.device)
             return this.dabResponse(400, `Device telemetry is already started, stop it first`);
 
-        await this.client.publish(topics.TELEMETRY_METRICS_TOPIC,
+        await this.client.publish(topics.DEVICE_TELEMETRY_METRICS_TOPIC,
             await cb()
         );
 
         this.telemetry.device = setInterval(async () => {
-            await this.client.publish(topics.TELEMETRY_METRICS_TOPIC,
+            await this.client.publish(topics.DEVICE_TELEMETRY_METRICS_TOPIC,
                 await cb()
             );
         }, data.frequency);
@@ -221,12 +221,12 @@ export class DabDeviceInterface {
         if (this.telemetry[data.app])
             return this.dabResponse(400, `App telemetry is already started for ${data.app}, stop it first`);
 
-        await this.client.publish(`${topics.TELEMETRY_METRICS_TOPIC}/${data.app}`,
+        await this.client.publish(`${topics.APP_TELEMETRY_METRICS_TOPIC}/${data.app}`,
             await cb
         );
 
         this.telemetry[data.app] = setInterval(async () => {
-            await this.client.publish(`${topics.TELEMETRY_METRICS_TOPIC}/${data.app}`,
+            await this.client.publish(`${topics.APP_TELEMETRY_METRICS_TOPIC}/${data.app}`,
                 await cb
             );
         }, data.frequency);
