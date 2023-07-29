@@ -155,11 +155,11 @@ export class DabBridge {
 
             let dabDeviceId = params.dabDeviceId ? params.dabDeviceId : uuidv4();
             dabDeviceInstance = new PartnerDabDevice(dabDeviceId, params.ip);
+            await dabDeviceInstance.init(this.mqttBrokerUri);
         } catch (err) {
             return this.dabResponse(500, err.toString());
         }
 
-        await dabDeviceInstance.init(this.mqttBrokerUri);
         this.deviceMap.set(params.ip, dabDeviceInstance);
         return {...this.dabResponse(), ...{deviceId: dabDeviceInstance.dabDeviceID}};
     }
