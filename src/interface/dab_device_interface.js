@@ -15,8 +15,8 @@
 
 import { MqttClient } from '../lib/mqtt_client/index.js';
 import  * as topics  from './dab_topics.js';
-import { v4 as uuidv4 } from 'uuid';
-import { readFileSync } from 'fs';
+import {getLogger} from "../lib/util.js";
+const logger = getLogger()
 
 export class DabDeviceInterface {
     /**
@@ -41,6 +41,7 @@ export class DabDeviceInterface {
      * Init to be called once at application startup, unless following stop
      */
     async init(uri) {
+        logger.info("Initializing DabDeviceInterface with MQTT URI:", uri); // Use in-built logger to send .info() .debug() or .error() messages.
         this.client = new MqttClient();
 
         //Pre-Init Handler Registration
@@ -151,7 +152,7 @@ export class DabDeviceInterface {
      * startDeviceTelemetry(data) by forwarding data and passing in a callback function and
      * returning this result.
      * @param {Object} data - request object
-     * @param {number} data.frequency - telemetry update frequency in milliseconds
+     * @param {number} data.duration - telemetry update frequency in milliseconds
      * @param {TelemetryCallback} cb - callback to generate/collect telemetry
      * @returns {Promise<DabResponse>}
      */
@@ -159,8 +160,8 @@ export class DabDeviceInterface {
         if (typeof cb !== "function")
             return this.dabResponse(400, "Device telemetry callback is not a function");
 
-        if (typeof data.frequency !== "number" || !Number.isInteger(data.frequency))
-            return this.dabResponse(400, "'frequency' must be set as number of milliseconds between updates");
+        if (typeof data.duration !== "number" || !Number.isInteger(data.duration))
+            return this.dabResponse(400, "'duration' must be set as number of milliseconds between updates");
 
         if (this.telemetry.device)
             return this.dabResponse(400, `Device telemetry is already started, stop it first`);
@@ -173,8 +174,8 @@ export class DabDeviceInterface {
             await this.client.publish(`dab/${this.dabDeviceID}/${topics.DEVICE_TELEMETRY_METRICS_TOPIC}`,
                 await cb()
             );
-        }, data.frequency);
-        return { ...this.dabResponse(), ...{frequency: data.frequency} };
+        }, data.duration);
+        return { ...this.dabResponse(), ...{duration: data.duration} };
     }
 
     /**
@@ -199,51 +200,51 @@ export class DabDeviceInterface {
      * startAppTelemetry(data) by forwarding data and passing in a callback function and returning
      * this result.
      * @param {Object} data - request object
-     * @param {string} data.app - application id to start sending telemetry
-     * @param {number} data.frequency - telemetry update frequency in milliseconds
+     * @param {string} data.appId - application id to start sending telemetry
+     * @param {number} data.duration - telemetry update frequency in milliseconds
      * @param {TelemetryCallback} cb - callback to generate/collect telemetry
      * @returns {Promise<DabResponse>}
      */
     async startAppTelemetryImpl(data, cb) {
         if (typeof cb !== "function") return this.dabResponse(400, "App telemetry callback is not a function");
 
-        if (typeof data.app !== "string")
+        if (typeof data.appId !== "string")
             return this.dabResponse(400, "'app' must be set as the application id to start sending telemetry");
 
-        if (typeof data.frequency !== "number" || !Number.isInteger(data.frequency))
+        if (typeof data.duration !== "number" || !Number.isInteger(data.duration))
             return this.dabResponse(400, "'frequency' must be set as number of milliseconds between updates");
 
-        if (this.telemetry[data.app])
-            return this.dabResponse(400, `App telemetry is already started for ${data.app}, stop it first`);
+        if (this.telemetry[data.appId])
+            return this.dabResponse(400, `App telemetry is already started for ${data.appId}, stop it first`);
 
-        await this.client.publish(`dab/${this.dabDeviceID}/${topics.APP_TELEMETRY_METRICS_TOPIC}/${data.app}`,
-            await cb
+        await this.client.publish(`dab/${this.dabDeviceID}/${topics.APP_TELEMETRY_METRICS_TOPIC}/${data.appId}`,
+            await cb(data.appId)
         );
 
-        this.telemetry[data.app] = setInterval(async () => {
-            await this.client.publish(`dab/${this.dabDeviceID}/${topics.APP_TELEMETRY_METRICS_TOPIC}/${data.app}`,
-                await cb
+        this.telemetry[data.appId] = setInterval(async () => {
+            await this.client.publish(`dab/${this.dabDeviceID}/${topics.APP_TELEMETRY_METRICS_TOPIC}/${data.appId}`,
+                await cb(data.appId)
             );
-        }, data.frequency);
-        return { ...this.dabResponse(), ...{frequency: data.frequency} };
+        }, data.duration);
+        return { ...this.dabResponse(), ...{duration: data.duration} };
     }
 
     /**
      * Stops publishing app telemetry. This can be called from the impl of
      * stopAppTelemetry(data) by forwarding and returning this function.
      * @param {Object} data - request object
-     * @param {string} data.app - application id to stop sending telemetry
+     * @param {string} data.appId - application id to stop sending telemetry
      * @returns {Promise<DabResponse>}
      */
     stopAppTelemetryImpl = async (data) => {
-        if (typeof data.app !== "string")
+        if (typeof data.appId !== "string")
             return this.dabResponse(400, "'app' must be set as the application id to stop sending telemetry");
 
-        if (!this.telemetry[data.app]) {
-            return this.dabResponse(400, "Device telemetry for ${data.app} not started");
+        if (!this.telemetry[data.appId]) {
+            return this.dabResponse(400, "Device telemetry for ${data.appId} not started");
         } else {
-            clearInterval(this.telemetry[data.app]);
-            delete this.telemetry[data.app];
+            clearInterval(this.telemetry[data.appId]);
+            delete this.telemetry[data.appId];
             return this.dabResponse();
         }
     }
@@ -302,7 +303,7 @@ export class DabDeviceInterface {
      * Launches an application.
      * @abstract
      * @param {Object} data - request object
-     * @param {string} data.app - application id to launch
+     * @param {string} data.appId - application id to launch
      * @param {string} [data.parameters] - parameters to pass to application
      * @returns {Promise<DabResponse>}
      */
@@ -317,7 +318,7 @@ export class DabDeviceInterface {
      * suspended, quit, etc.).
      * @abstract
      * @param {Object} data - request object
-     * @param {string} data.app - application id to exit
+     * @param {string} data.appId - application id to exit
      * @param {boolean} [data.force] - force exit, default to false
      * @returns {Promise<DabResponse>}
      */
@@ -388,7 +389,7 @@ export class DabDeviceInterface {
      * "return await this._startDeviceTelemetry(data, cb)" - see _startDeviceTelemetry for details.
      * @abstract
      * @param {Object} data - request object
-     * @param {number} data.frequency - telemetry update frequency in milliseconds
+     * @param {number} data.duration - telemetry update frequency in milliseconds
      * @returns {Promise<DabResponse>}
      */
     async startDeviceTelemetry(data) {
@@ -412,8 +413,8 @@ export class DabDeviceInterface {
      * "return await this._startAppTelemetry(data, cb)" - see _startAppTelemetry for details.
      * @abstract
      * @param {Object} data - request object
-     * @param {string} data.app - application id to start sending telemetry
-     * @param {number} data.frequency - telemetry update frequency in milliseconds
+     * @param {string} data.appId - application id to start sending telemetry
+     * @param {number} data.duration - telemetry update frequency in milliseconds
      * @returns {Promise<DabResponse>}
      */
     async startAppTelemetry(data) {
@@ -425,7 +426,7 @@ export class DabDeviceInterface {
      * "return await this._stopAppTelemetry(data);"
      * @abstract
      * @param {Object} data - request object
-     * @param {string} data.app - application id to start sending telemetry
+     * @param {string} data.appId - application id to start sending telemetry
      * @returns {Promise<DabResponse>}
      */
     async stopAppTelemetry(data) {

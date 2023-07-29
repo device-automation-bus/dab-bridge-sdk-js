@@ -148,7 +148,7 @@ export class DabBridge {
 
         let dabDeviceInstance = null;
         try {
-            if(!params.skipValidation && !PartnerDabDevice.isCompatible(params.ip))
+            if(!params.skipValidation && !await PartnerDabDevice.isCompatible(params.ip))
                 return this.dabResponse(500,
                     "This target device cannot be bridged by this implementation. " +
                     "isTargetDABCompatible() returned false.");

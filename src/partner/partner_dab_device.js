@@ -1,4 +1,6 @@
 import {DabDeviceInterface} from "../interface/dab_device_interface.js";
+import {getLogger} from "../lib/util.js";
+const logger = getLogger();
 
 /*
  * This is a sample Partner DAB Device Bridge Implementation that shows
@@ -18,10 +20,12 @@ export class PartnerDabDevice extends DabDeviceInterface {
      *
      * @param deviceIP The target IP address of the device the user wishes to start DAB bridging for.
      */
-    static isCompatible(deviceIP){
+    static async isCompatible(deviceIP){
         // Do checks and return true if target deviceIP can be used for your DAB implementation.
         // You may also throw errors, the bridge will catch these and use them as reasoning for why the add-device failed.
 
+        //Any resources, connections, or properties created in the process of confirming that your bridge implementation
+        // is fully compatible with the target deviceIP must be cleaned up.
         return false;
     }
 
@@ -37,12 +41,30 @@ export class PartnerDabDevice extends DabDeviceInterface {
      * @param dabDeviceId DAB Device ID that was generated for this specific object instance.
      *                    Used internally for topic subscription and routing.
      */
-    constructor(dabDeviceId, deviceIP) {
+     constructor(dabDeviceId, deviceIP) {
         super(dabDeviceId);
-        this.deviceIP = deviceIP; // Use for instantiating any websockets, connections, and other properties needed.
+        this.deviceIP = deviceIP;
+        // Use for storing any properties or object building.
+        // Note that async / await calls cannot be made here, but can be in the init() method below,
+        // which will be called immediately after construction.
     }
 
 
+    /**
+     * This async initialization function is called immediately after the construction of this class,
+     * but before any DAB functions below are invoked.
+     *
+     * @param uri MQTT Broker URI that is used by the superclass init.
+     * @returns super.init(uri); --> already predefined
+     */
+    init = async (uri) => {
+        logger.debug("Initializing in partner implementation.");
+        // Use in-built logger to send .info() .debug() or .error() messages.
+
+        // Instantiate any websockets, connections, and other persistent properties needed to handle DAB requests.
+
+        return super.init(uri);
+    }
 
     /**
      * type ListSupportedOperationRequest = DabRequest
@@ -273,9 +295,12 @@ export class PartnerDabDevice extends DabDeviceInterface {
      * }
      */
     startAppTelemetry = async (data) => {
-        return await this.startAppTelemetryImpl(data, async () => {
+        return await this.startAppTelemetryImpl(data, async (appId) => {
             // DabDeviceInterface handles firing and reporting app telemetry on its own using startAppTelemetryImpl
             // As a partner, you just need to implement this callback function and return data
+            // The appId variable refers to which application this callback is for.
+
+            logger.debug("App Telemetry callback received by partner for appId:", appId);
             // This function will be invoked in regular intervals as per the request duration.
             return this.dabResponse(501, "Not implemented.");
         })
