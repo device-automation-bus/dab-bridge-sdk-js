@@ -148,18 +148,18 @@ export class DabBridge {
 
         let dabDeviceInstance = null;
         try {
-            if(!params.skipValidation && !PartnerDabDevice.isCompatible(params.ip))
+            if(!params.skipValidation && !await PartnerDabDevice.isCompatible(params.ip))
                 return this.dabResponse(500,
                     "This target device cannot be bridged by this implementation. " +
                     "isTargetDABCompatible() returned false.");
 
             let dabDeviceId = params.dabDeviceId ? params.dabDeviceId : uuidv4();
             dabDeviceInstance = new PartnerDabDevice(dabDeviceId, params.ip);
+            await dabDeviceInstance.init(this.mqttBrokerUri);
         } catch (err) {
             return this.dabResponse(500, err.toString());
         }
 
-        await dabDeviceInstance.init(this.mqttBrokerUri);
         this.deviceMap.set(params.ip, dabDeviceInstance);
         return {...this.dabResponse(), ...{deviceId: dabDeviceInstance.dabDeviceID}};
     }
