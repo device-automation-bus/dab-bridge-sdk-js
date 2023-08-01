@@ -156,7 +156,7 @@ export class PartnerDabDevice extends DabDeviceInterface {
      *
      * @param data interface ExitApplicationRequest extends DabRequest {
      *    appId: string;
-     *    force?: boolean;
+     *    background?: boolean;
      * }
      * @returns interface ExitApplicationResponse extends DabResponse {
      *    state: string;
