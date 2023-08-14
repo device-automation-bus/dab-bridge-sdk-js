@@ -84,7 +84,7 @@ export class DabDeviceInterface {
             [
                 // this.client.publishRetained(`dab/${this.dabDeviceID}/${topics.DAB_VERSION_TOPIC}`, this.version()),
                 // this.client.publishRetained(`dab/${this.dabDeviceID}/${topics.DEVICE_INFO_TOPIC}`, await this.deviceInfo()),
-                this.notify("info", "DAB service is online")
+                this.notify("info", "DAB device is initialized.")
             ]
         );
 
@@ -97,7 +97,7 @@ export class DabDeviceInterface {
     async stop() {
         await Promise.all(
             [
-                this.notify("warn", "DAB service is shutting down"),
+                this.notify("warn", "DAB device is stopping."),
                 // this.client.clearRetained(`dab/${this.dabDeviceID}/${topics.DEVICE_INFO_TOPIC}`),
                 // this.client.clearRetained(`dab/${this.dabDeviceID}/${topics.DAB_VERSION_TOPIC}`)
             ]
@@ -110,7 +110,7 @@ export class DabDeviceInterface {
      * Publishes notifications to the message topic
      */
     async notify(level, message) {
-        return await this.client.publish(topics.DAB_MESSAGES,
+        return await this.client.publish(`dab/${this.dabDeviceID}/${topics.DAB_MESSAGES}`,
             {
                 timestamp: +new Date(),
                 level: level,
