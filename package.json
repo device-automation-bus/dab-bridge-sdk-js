@@ -1,12 +1,10 @@
 {
   "name": "dab-bridge-js",
-  "version": "1.0.0",
-  "description": "Enables compatibility of multiple devices based on Reference Design Kit (RDK) with DAB (get-dab.com) through a network",
+  "version": "1.0.2",
+  "description": "Starter kit that can be used to develop a Device Automation Bus Bridge that is compliant with the DAB 2.0 specification.",
   "main": "bridge.js",
   "scripts": {
-    "build": "npm run build:emulator && npm run build:rdk",
-    "build:emulator": "TARGET_ENV=emulator node build.js",
-    "build:rdk": "TARGET_ENV=rdk node build.js",
+    "start": "node src/index.js",
     "test": "jest"
   },
   "license": "MIT",
