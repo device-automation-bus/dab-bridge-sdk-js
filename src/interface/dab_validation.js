@@ -108,8 +108,8 @@ export function validateSetSystemSettingsRequest(data) {
 
     for (const key of keys) {
         const validator = SYSTEM_SETTING_VALIDATORS[key];
-        if (!validator) return `setSystemSettings contains unsupported setting key: ${key}`;
-        if (!validator(data[key])) return `setSystemSettings.${key} has invalid value`;
+        if (!validator) return `Unsupported system setting key: ${key}`;
+        if (!validator(data[key])) return `Invalid value for system setting: ${key}`;
     }
 
     return null;
@@ -238,5 +238,8 @@ export function validateDeviceInfoResponse(data) {
 
     return null;
 }
+
+export const validateSystemSettingsSetRequest =
+    validateSetSystemSettingsRequest;
 
 export { CONTENT_CATEGORIES };

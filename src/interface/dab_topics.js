@@ -40,10 +40,6 @@ export const CONTENT_SEARCH_TOPIC = "content/search";
 export const CONTENT_RECOMMENDATIONS_TOPIC = "content/recommendations";
 export const CONTENT_OPEN_TOPIC = "content/open";
 
-export const CONTENT_SEARCH_TOPIC = "content/search";
-export const CONTENT_RECOMMENDATIONS_TOPIC = "content/recommendations";
-export const CONTENT_OPEN_TOPIC = "content/open";
-
 export const DEVICE_TELEMETRY_START_TOPIC = "device-telemetry/start";
 export const DEVICE_TELEMETRY_STOP_TOPIC = "device-telemetry/stop";
 export const DEVICE_TELEMETRY_METRICS_TOPIC = "device-telemetry/metrics";

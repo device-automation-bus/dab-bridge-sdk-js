@@ -32,6 +32,12 @@ Here is a brief visualization of how the bridge works end-to-end. Details can be
 
 Run sanity unit tests using `npm run test`, and use the Compliance Suite tool to run tests end-to-end with the device.
 
+For a quick local validation flow and evidence collection script, with
+automatic local bridge startup when needed, see
+[Quick Validation](test/QUICK_VALIDATION.md).
+The quick validation output is centered on one
+`final_results.json` file plus a small set of top-level log files.
+
 ## CLI Parameters
 
 ```
