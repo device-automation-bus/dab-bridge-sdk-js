@@ -5,11 +5,19 @@ import { jest } from "@jest/globals";
 
 describe("DAB 2.1 request timeout behavior", () => {
   test("default timeout remains 20000 ms", () => {
-    expect(getRequestTimeoutMs("applications/list")).toBe(20_000);
+    expect(getRequestTimeoutMs("system/network-reset")).toBe(20_000);
+  });
+
+  test("applications/list timeout is 250 ms", () => {
+    expect(getRequestTimeoutMs("applications/list")).toBe(250);
   });
 
   test("applications/install timeout is 60000 ms", () => {
     expect(getRequestTimeoutMs("applications/install")).toBe(60_000);
+  });
+
+  test("applications/uninstall timeout is 10000 ms", () => {
+    expect(getRequestTimeoutMs("applications/uninstall")).toBe(10_000);
   });
 
   test("applications/install-from-app-store timeout is 60000 ms", () => {

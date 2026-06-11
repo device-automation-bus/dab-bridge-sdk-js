@@ -222,6 +222,7 @@ export class Client {
       let timer;
       const isChunkedStopCollectionRequest = topic === STOP_COLLECTION_TOPIC;
       const stopCollectionChunks = [];
+      let expectedRemainingChunks = null;
 
       const scheduleTimeout = () => {
         timer = setTimeout(async function () {
@@ -265,8 +266,28 @@ export class Client {
             return;
           }
 
-          stopCollectionChunks.push(msg);
           const remainingChunks = msg.remainingChunks;
+          const hasRemainingChunks = remainingChunks !== undefined;
+
+          if (hasRemainingChunks && !Number.isInteger(remainingChunks)) {
+            subscription.end();
+            clearTimeout(timer);
+            reject(new Error("Invalid stop-collection chunk metadata"));
+            return;
+          }
+
+          if (
+            expectedRemainingChunks !== null &&
+            remainingChunks !== expectedRemainingChunks - 1
+          ) {
+            subscription.end();
+            clearTimeout(timer);
+            reject(new Error("Invalid stop-collection chunk sequence"));
+            return;
+          }
+
+          stopCollectionChunks.push(msg);
+          expectedRemainingChunks = remainingChunks;
           const hasMoreChunks = Number.isInteger(remainingChunks) && remainingChunks > 0;
 
           if (hasMoreChunks) {

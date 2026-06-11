@@ -1,7 +1,7 @@
 {
   "name": "dab-bridge-js",
   "version": "1.0.2",
-  "description": "Starter kit that can be used to develop a Device Automation Bus Bridge that is compliant with the DAB 2.0 specification.",
+  "description": "Starter kit for DAB 2.0 and 2.1 bridge development.",
   "main": "bridge.js",
   "scripts": {
     "start": "node src/index.js",

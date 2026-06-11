@@ -16,8 +16,10 @@
 import { MqttClient } from '../lib/mqtt_client/index.js';
 import * as topics from './dab_topics.js';
 import {
+    validateAppIdRequest,
     validateContentRecommendationsResponse,
     validateDeviceInfoResponse,
+    validateGetPowerModeResponse,
     validateInstallAppFromStoreRequest,
     validateInstallAppRequest,
     validateOpenContentRequest,
@@ -27,7 +29,8 @@ import {
     validateSetPowerModeResponse,
     validateSetSystemSettingsRequest,
     validateSystemSettingsGetResponse,
-    validateSystemSettingsListResponse
+    validateSystemSettingsListResponse,
+    validateSystemSettingsSetResponse
 } from './dab_validation.js';
 import { getLogger } from "../lib/util.js";
 const logger = getLogger();
@@ -72,8 +75,16 @@ export class DabDeviceInterface {
                     this.installApp,
                     { request: validateInstallAppRequest }
                 )),
-                this.client.handle(`dab/${this.dabDeviceID}/${topics.APPLICATIONS_UNINSTALL_TOPIC}`, this.uninstallApp),
-                this.client.handle(`dab/${this.dabDeviceID}/${topics.APPLICATIONS_CLEAR_DATA_TOPIC}`, this.clearAppData),
+                this.client.handle(`dab/${this.dabDeviceID}/${topics.APPLICATIONS_UNINSTALL_TOPIC}`, this.withValidation(
+                    "uninstallApp",
+                    this.uninstallApp,
+                    { request: (data) => validateAppIdRequest(data, "uninstallApp") }
+                )),
+                this.client.handle(`dab/${this.dabDeviceID}/${topics.APPLICATIONS_CLEAR_DATA_TOPIC}`, this.withValidation(
+                    "clearAppData",
+                    this.clearAppData,
+                    { request: (data) => validateAppIdRequest(data, "clearAppData") }
+                )),
                 this.client.handle(`dab/${this.dabDeviceID}/${topics.APPLICATIONS_INSTALL_FROM_APP_STORE_TOPIC}`, this.withValidation(
                     "installAppFromStore",
                     this.installAppFromStore,
@@ -98,10 +109,17 @@ export class DabDeviceInterface {
                 this.client.handle(`dab/${this.dabDeviceID}/${topics.SYSTEM_SETTING_SET_TOPIC}`, this.withValidation(
                     "setSystemSettings",
                     this.setSystemSettings,
-                    { request: validateSetSystemSettingsRequest }
+                    {
+                        request: validateSetSystemSettingsRequest,
+                        response: validateSystemSettingsSetResponse
+                    }
                 )),
 
-                this.client.handle(`dab/${this.dabDeviceID}/${topics.SYSTEM_POWER_MODE_GET_TOPIC}`, this.getPowerMode),
+                this.client.handle(`dab/${this.dabDeviceID}/${topics.SYSTEM_POWER_MODE_GET_TOPIC}`, this.withValidation(
+                    "getPowerMode",
+                    this.getPowerMode,
+                    { response: validateGetPowerModeResponse }
+                )),
                 this.client.handle(`dab/${this.dabDeviceID}/${topics.SYSTEM_POWER_MODE_SET_TOPIC}`, this.withValidation(
                     "setPowerMode",
                     this.setPowerMode,
@@ -232,7 +250,7 @@ export class DabDeviceInterface {
             response.error = errorOrData;
         } else { // If the status is 200, then
             if(errorOrData){
-                response = {...status, ...errorOrData}; // Expand errorOrMessage
+                response = {status, ...errorOrData};
             }
         }
         return response;
@@ -307,10 +325,10 @@ export class DabDeviceInterface {
         if (typeof cb !== "function") return this.dabResponse(400, "App telemetry callback is not a function");
 
         if (typeof data.appId !== "string")
-            return this.dabResponse(400, "'app' must be set as the application id to start sending telemetry");
+            return this.dabResponse(400, "'appId' must be set as the application id to start sending telemetry");
 
         if (typeof data.duration !== "number" || !Number.isInteger(data.duration))
-            return this.dabResponse(400, "'frequency' must be set as number of milliseconds between updates");
+            return this.dabResponse(400, "'duration' must be set as number of milliseconds between updates");
 
         if (this.telemetry[data.appId])
             return this.dabResponse(400, `App telemetry is already started for ${data.appId}, stop it first`);
@@ -336,10 +354,10 @@ export class DabDeviceInterface {
      */
     stopAppTelemetryImpl = async (data) => {
         if (typeof data.appId !== "string")
-            return this.dabResponse(400, "'app' must be set as the application id to stop sending telemetry");
+            return this.dabResponse(400, "'appId' must be set as the application id to stop sending telemetry");
 
         if (!this.telemetry[data.appId]) {
-            return this.dabResponse(400, "Device telemetry for ${data.appId} not started");
+            return this.dabResponse(400, `Device telemetry for ${data.appId} not started`);
         } else {
             clearInterval(this.telemetry[data.appId]);
             delete this.telemetry[data.appId];

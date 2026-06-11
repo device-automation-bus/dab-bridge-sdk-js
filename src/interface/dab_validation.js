@@ -13,7 +13,7 @@ const POWER_MODES = new Set(["Active", "Standby", "Deep Sleep"]);
 
 const SYSTEM_SETTING_VALIDATORS = {
     language: (value) => typeof value === "string" && value.length > 0,
-    outputResolution: (value) => typeof value === "string" && value.length > 0,
+    outputResolution: isOutputResolution,
     memc: (value) => typeof value === "boolean",
     cec: (value) => typeof value === "boolean",
     lowLatencyMode: (value) => typeof value === "boolean",
@@ -33,7 +33,7 @@ const SYSTEM_SETTING_VALIDATORS = {
     screenSaverTimeout: (value) => Number.isInteger(value),
     personalizedAds: (value) => typeof value === "boolean",
     highContrastText: (value) => typeof value === "boolean",
-    identifierForAdvertising: (value) => value === null || hasText(value)
+    identifierForAdvertising: hasText
 };
 
 function isObject(value) {
@@ -42,6 +42,13 @@ function isObject(value) {
 
 function isStringArray(value) {
     return Array.isArray(value) && value.every((item) => typeof item === "string");
+}
+
+function isOutputResolution(value) {
+    return isObject(value) &&
+        Number.isInteger(value.width) &&
+        Number.isInteger(value.height) &&
+        Number.isInteger(value.frequency);
 }
 
 function hasText(value) {
@@ -83,6 +90,14 @@ export function validateInstallAppFromStoreRequest(data) {
     return null;
 }
 
+export function validateAppIdRequest(data, operation) {
+    if (!isObject(data)) return `${operation} request must be an object`;
+    if (!hasText(data.appId)) {
+        return `${operation}.appId must be a non-empty string`;
+    }
+    return null;
+}
+
 export function validateSetPowerModeRequest(data) {
     if (!isObject(data)) return "setPowerMode request must be an object";
     if (!POWER_MODES.has(data.powerMode)) {
@@ -91,16 +106,26 @@ export function validateSetPowerModeRequest(data) {
     return null;
 }
 
-export function validateSetPowerModeResponse(data) {
-    if (!isObject(data)) return "setPowerMode response must be an object";
-    if (typeof data.status !== "number") return "setPowerMode response.status must be a number";
+export function validatePowerModeResponse(data, operation) {
+    if (!isObject(data)) return `${operation} response must be an object`;
+    if (typeof data.status !== "number") {
+        return `${operation} response.status must be a number`;
+    }
     if (Math.floor(data.status / 100) === 2 && !POWER_MODES.has(data.powerMode)) {
-        return `setPowerMode response.powerMode must be one of: ${Array.from(POWER_MODES).join(", ")}`;
+        return `${operation} response.powerMode must be one of: ${Array.from(POWER_MODES).join(", ")}`;
     }
     return null;
 }
 
-export function validateSetSystemSettingsRequest(data) {
+export function validateGetPowerModeResponse(data) {
+    return validatePowerModeResponse(data, "getPowerMode");
+}
+
+export function validateSetPowerModeResponse(data) {
+    return validatePowerModeResponse(data, "setPowerMode");
+}
+
+export function validateSystemSettingsSetRequest(data) {
     if (!isObject(data)) return "setSystemSettings request must be an object";
 
     const keys = Object.keys(data);
@@ -108,12 +133,17 @@ export function validateSetSystemSettingsRequest(data) {
 
     for (const key of keys) {
         const validator = SYSTEM_SETTING_VALIDATORS[key];
-        if (!validator) return `setSystemSettings contains unsupported setting key: ${key}`;
-        if (!validator(data[key])) return `setSystemSettings.${key} has invalid value`;
+        if (!validator) return `Unsupported system setting key: ${key}`;
+        if (!validator(data[key])) {
+            return `Invalid value for setting '${key}'`;
+        }
     }
 
     return null;
 }
+
+export const validateSetSystemSettingsRequest =
+    validateSystemSettingsSetRequest;
 
 export function validateSystemSettingsGetResponse(response) {
     const commonError = validateDabResponse(response);
@@ -136,7 +166,8 @@ export function validateSystemSettingsListResponse(response) {
 
     const capabilityValidators = {
         language: isStringArray,
-        outputResolution: isStringArray,
+        outputResolution: (value) =>
+            Array.isArray(value) && value.every(isOutputResolution),
         memc: (value) => typeof value === "boolean",
         cec: (value) => typeof value === "boolean",
         lowLatencyMode: (value) => typeof value === "boolean",
@@ -148,12 +179,12 @@ export function validateSystemSettingsListResponse(response) {
         videoInputSource: isStringArray,
         audioVolume: isRange,
         mute: (value) => typeof value === "boolean",
-        timeZone: (value) => isStringArray(value) || value === true,
+        timeZone: isStringArray,
         textToSpeech: (value) => typeof value === "boolean",
-        brightness: (value) => isRange(value) || typeof value === "boolean",
-        contrast: (value) => isRange(value) || typeof value === "boolean",
+        brightness: isRange,
+        contrast: isRange,
         screenSaver: (value) => typeof value === "boolean",
-        screenSaverTimeout: (value) => isRange(value) || typeof value === "boolean",
+        screenSaverMinTimeout: Number.isInteger,
         personalizedAds: (value) => typeof value === "boolean",
         highContrastText: (value) => typeof value === "boolean",
         identifierForAdvertising: (value) => typeof value === "boolean"
@@ -168,6 +199,10 @@ export function validateSystemSettingsListResponse(response) {
     }
 
     return null;
+}
+
+export function validateSystemSettingsSetResponse(response) {
+    return validateSystemSettingsGetResponse(response);
 }
 
 export function validateSearchContentRequest(data) {
@@ -217,8 +252,8 @@ export function validateContentRecommendationsResponse(response) {
 
 export function validateOpenContentRequest(data) {
     if (!isObject(data)) return "openContent request must be an object";
-    if (!hasText(data.entryId) && !hasText(data.contentId)) {
-        return "openContent requires a non-empty entryId (or contentId)";
+    if (!hasText(data.entryId)) {
+        return "openContent.entryId must be a non-empty string";
     }
     return null;
 }

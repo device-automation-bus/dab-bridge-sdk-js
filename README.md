@@ -1,8 +1,20 @@
 # Device Automation Bus Bridge SDK
 
-This project is a reference template that can be used to develop a DAB Bridge that is compliant with the DAB 2.0 and 2.1 specifications.
+This project is a reference template that can be used to
+develop a DAB Bridge that is compliant with the DAB 2.0 and
+2.1 specifications.
 
 More details on the general usage for DAB Bridges can be found in the DAB User Guide.
+
+## DAB 2.1 Support
+
+This SDK includes DAB 2.1 support for request and response
+validation, the added client and interface methods, and version
+reporting for `2.0` and `2.1`.
+
+The SDK also adds operation-based timeouts for DAB 2.1 flows and
+handles chunked `system/logs/stop-collection` responses by
+assembling the final `logArchive` payload before resolving.
 
 ## Structure Overview
 

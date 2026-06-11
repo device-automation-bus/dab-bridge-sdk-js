@@ -1,10 +1,13 @@
 import {
+  validateAppIdRequest,
   validateContentRecommendationsResponse,
+  validateGetPowerModeResponse,
   validateOpenContentRequest,
   validateSearchContentRequest,
   validateSearchContentResponse,
   validateSystemSettingsGetResponse,
   validateSystemSettingsListResponse,
+  validateSystemSettingsSetResponse,
   validateSystemSettingsSetRequest
 } from "../src/interface/dab_validation.js";
 
@@ -12,11 +15,12 @@ describe("DAB 2.1 settings schema validation", () => {
   test("system/settings/list accepts DAB 2.1 supported settings response", () => {
     const response = {
       status: 200,
+      outputResolution: [{ width: 1920, height: 1080, frequency: 60 }],
       brightness: { min: 0, max: 100 },
       contrast: { min: 0, max: 100 },
       timeZone: ["Europe/Helsinki", "UTC"],
       screenSaver: true,
-      screenSaverTimeout: { min: 10, max: 600 },
+      screenSaverMinTimeout: 10,
       personalizedAds: true,
       highContrastText: true,
       identifierForAdvertising: true
@@ -28,6 +32,7 @@ describe("DAB 2.1 settings schema validation", () => {
   test("system/settings/get accepts DAB 2.1 current values", () => {
     const response = {
       status: 200,
+      outputResolution: { width: 1920, height: 1080, frequency: 60 },
       brightness: 50,
       contrast: 55,
       timeZone: "Europe/Helsinki",
@@ -43,13 +48,14 @@ describe("DAB 2.1 settings schema validation", () => {
 
   test("system/settings/set accepts valid fields and value types", () => {
     const request = {
+      outputResolution: { width: 1920, height: 1080, frequency: 60 },
       brightness: 80,
       contrast: 40,
       personalizedAds: true,
       highContrastText: false,
       screenSaver: true,
       screenSaverTimeout: 300,
-      identifierForAdvertising: null
+      identifierForAdvertising: "38400000-8cf0-11bd-b23e-10b96e40000d"
     };
 
     expect(validateSystemSettingsSetRequest(request)).toBeNull();
@@ -66,6 +72,16 @@ describe("DAB 2.1 settings schema validation", () => {
   test("error responses do not require success-only setting fields", () => {
     expect(validateSystemSettingsGetResponse({ status: 400, error: "bad request" })).toBeNull();
     expect(validateSystemSettingsListResponse({ status: 500, error: "internal" })).toBeNull();
+  });
+
+  test("system/settings/set response validates using current values shape", () => {
+    const response = {
+      status: 200,
+      outputResolution: { width: 1920, height: 1080, frequency: 60 },
+      brightness: 80
+    };
+
+    expect(validateSystemSettingsSetResponse(response)).toBeNull();
   });
 
   test("existing DAB 2.0 settings behavior remains backward compatible", () => {
@@ -107,6 +123,10 @@ describe("DAB 2.1 content schema validation", () => {
     expect(validateOpenContentRequest({ entryId: "abc" })).toBeNull();
   });
 
+  test("content/open rejects contentId without entryId", () => {
+    expect(validateOpenContentRequest({ contentId: "abc" })).toContain("entryId");
+  });
+
   test("invalid ContentEntry is rejected", () => {
     const invalidEntry = { ...validEntry };
     delete invalidEntry.poster;
@@ -125,5 +145,15 @@ describe("DAB 2.1 content schema validation", () => {
 
   test("existing non-content operations are not affected", () => {
     expect(validateSystemSettingsSetRequest({ mute: true })).toBeNull();
+  });
+
+  test("app id requests require appId", () => {
+    expect(validateAppIdRequest({ appId: "YouTube" }, "uninstallApp")).toBeNull();
+    expect(validateAppIdRequest({}, "uninstallApp")).toContain("appId");
+  });
+
+  test("get power mode validates allowed response values", () => {
+    expect(validateGetPowerModeResponse({ status: 200, powerMode: "Standby" })).toBeNull();
+    expect(validateGetPowerModeResponse({ status: 200, powerMode: "Off" })).toContain("powerMode");
   });
 });
