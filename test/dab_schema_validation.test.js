@@ -5,7 +5,7 @@ import {
   validateSearchContentResponse,
   validateSystemSettingsGetResponse,
   validateSystemSettingsListResponse,
-  validateSystemSettingsSetRequest
+  validateSetSystemSettingsRequest
 } from "../src/interface/dab_validation.js";
 
 describe("DAB 2.1 settings schema validation", () => {
@@ -52,15 +52,15 @@ describe("DAB 2.1 settings schema validation", () => {
       identifierForAdvertising: null
     };
 
-    expect(validateSystemSettingsSetRequest(request)).toBeNull();
+    expect(validateSetSystemSettingsRequest(request)).toBeNull();
   });
 
   test("system/settings/set rejects unknown setting names", () => {
-    expect(validateSystemSettingsSetRequest({ unknownSetting: true })).toContain("Unsupported");
+    expect(validateSetSystemSettingsRequest({ unknownSetting: true })).toMatch(/unsupported/i);
   });
 
   test("system/settings/set rejects invalid value types", () => {
-    expect(validateSystemSettingsSetRequest({ brightness: "high" })).toContain("Invalid value");
+    expect(validateSetSystemSettingsRequest({ brightness: "high" })).toMatch(/invalid value/i);
   });
 
   test("error responses do not require success-only setting fields", () => {
@@ -74,7 +74,7 @@ describe("DAB 2.1 settings schema validation", () => {
       audioVolume: 12,
       mute: false
     };
-    expect(validateSystemSettingsSetRequest(legacyRequest)).toBeNull();
+    expect(validateSetSystemSettingsRequest(legacyRequest)).toBeNull();
   });
 });
 
@@ -124,6 +124,6 @@ describe("DAB 2.1 content schema validation", () => {
   });
 
   test("existing non-content operations are not affected", () => {
-    expect(validateSystemSettingsSetRequest({ mute: true })).toBeNull();
+    expect(validateSetSystemSettingsRequest({ mute: true })).toBeNull();
   });
 });
