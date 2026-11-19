@@ -1,6 +1,8 @@
 import { spawn } from "child_process";
 
-describe("Integration Test of Bridge Device Management Routes", () => {
+// Placeholder that only spawns mosquitto. Skipped until the MQTT
+// integration tests replace it.
+describe.skip("Integration Test of Bridge Device Management Routes", () => {
   let mosquitto_child = null;
 
   beforeAll(() => {
