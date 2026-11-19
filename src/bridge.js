@@ -191,7 +191,7 @@ export class DabBridge {
     listDevices = async (params) => {
         let deviceArray = [];
         this.deviceMap.forEach((value, key, map) => {
-            deviceArray.push({ip: key, deviceId: value.deviceId});
+            deviceArray.push({ip: key, deviceId: value.dabDeviceID});
         })
         return {...this.dabResponse(), ...{deviceList: deviceArray}};
     }
