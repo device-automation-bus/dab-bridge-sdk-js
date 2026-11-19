@@ -232,7 +232,7 @@ export class DabDeviceInterface {
             response.error = errorOrData;
         } else { // If the status is 200, then
             if(errorOrData){
-                response = {...status, ...errorOrData}; // Expand errorOrMessage
+                response = {status, ...errorOrData}; // Expand errorOrMessage
             }
         }
         return response;
