@@ -76,6 +76,17 @@ describe("DAB 2.1 settings schema validation", () => {
     };
     expect(validateSetSystemSettingsRequest(legacyRequest)).toBeNull();
   });
+
+  test("outputResolution uses the OutputResolution object", () => {
+    const uhd = { width: 3840, height: 2160, frequency: 59.94 };
+    expect(validateSetSystemSettingsRequest({ outputResolution: uhd })).toBeNull();
+    expect(validateSystemSettingsGetResponse({ status: 200, outputResolution: uhd })).toBeNull();
+    expect(validateSystemSettingsListResponse({ status: 200, outputResolution: [uhd] })).toBeNull();
+
+    expect(validateSetSystemSettingsRequest({ outputResolution: "3840x2160" })).toMatch(/invalid value/i);
+    expect(validateSetSystemSettingsRequest({ outputResolution: { width: 3840, height: 2160 } })).toMatch(/invalid value/i);
+    expect(validateSystemSettingsListResponse({ status: 200, outputResolution: ["2160p"] })).toMatch(/outputResolution/);
+  });
 });
 
 describe("DAB 2.1 content schema validation", () => {

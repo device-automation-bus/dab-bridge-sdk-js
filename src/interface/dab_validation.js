@@ -13,7 +13,7 @@ const POWER_MODES = new Set(["Active", "Standby", "Deep Sleep"]);
 
 const SYSTEM_SETTING_VALIDATORS = {
     language: (value) => typeof value === "string" && value.length > 0,
-    outputResolution: (value) => typeof value === "string" && value.length > 0,
+    outputResolution: isOutputResolution,
     memc: (value) => typeof value === "boolean",
     cec: (value) => typeof value === "boolean",
     lowLatencyMode: (value) => typeof value === "boolean",
@@ -42,6 +42,12 @@ function isObject(value) {
 
 function isStringArray(value) {
     return Array.isArray(value) && value.every((item) => typeof item === "string");
+}
+
+// Frequency may be fractional, e.g. 59.94 Hz
+function isOutputResolution(value) {
+    return isObject(value) && Number.isInteger(value.width) && Number.isInteger(value.height) &&
+        Number.isFinite(value.frequency);
 }
 
 function hasText(value) {
@@ -136,7 +142,7 @@ export function validateSystemSettingsListResponse(response) {
 
     const capabilityValidators = {
         language: isStringArray,
-        outputResolution: isStringArray,
+        outputResolution: (value) => Array.isArray(value) && value.every(isOutputResolution),
         memc: (value) => typeof value === "boolean",
         cec: (value) => typeof value === "boolean",
         lowLatencyMode: (value) => typeof value === "boolean",
