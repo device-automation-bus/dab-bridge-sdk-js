@@ -334,7 +334,7 @@ export class PartnerDabDevice extends DabDeviceInterface {
      * @returns {Promise<{status: number}>}
      */
     discovery = async () => {
-        return this.dabResponse(200, {deviceId: this.dabDeviceID, deviceIP: this.deviceIP});
+        return this.dabResponse(200, {deviceId: this.dabDeviceID, ip: this.deviceIP});
     }
 
     /**
