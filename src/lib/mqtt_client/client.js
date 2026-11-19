@@ -249,7 +249,7 @@ export class Client {
 
       const subscription = this.subscribe(responseTopic, async function (msg, pkg) {
         // Checks for the correct correlation Data.
-        if (pkg.correlationData != requestId) {
+        if (pkg.properties?.correlationData?.toString() !== requestId) {
           return;
         }
 
