@@ -310,6 +310,16 @@ export class Client {
             msg,
             pkg.topic.substring(0, topic.lastIndexOf("/"))
           );
+          // An array or async iterable is a series of responses to the same
+          // request, e.g. system/logs/stop-collection chunks. Publish each one
+          // in order with the same correlationData.
+          if (Array.isArray(resultMsg) || typeof resultMsg?.[Symbol.asyncIterator] === "function") {
+            for await (const response of resultMsg) {
+              logger.debug(`Responding on topic ${responseTopic} with message ${JSON.stringify(response)}`);
+              await this.publish(responseTopic, response, {properties: {correlationData: correlationData}});
+            }
+            return;
+          }
           logger.debug(`Responding on topic ${responseTopic} with message ${JSON.stringify(resultMsg)}`);
           return this.publish(responseTopic, resultMsg, {properties: {correlationData: correlationData}});
         } catch (error) {
