@@ -71,9 +71,14 @@ export class PartnerDabDevice extends DabDeviceInterface {
      * @returns interface ListSupportedOperationResponse extends DabResponse {
      *    operations: string [];
      * }
+     * The default lists every DAB operation except operations/list itself. Remove the ones
+     * your device does not support.
      */
     listSupportedOperations = async () => {
-        return this.dabResponse(501, "Not implemented.");
+        const response = await super.listSupportedOperations();
+        // const unsupported = ["voice/list", "voice/set", "voice/send-audio", "voice/send-text"];
+        // response.operations = response.operations.filter((operation) => !unsupported.includes(operation));
+        return response;
     }
 
     /**
