@@ -270,6 +270,9 @@ export class PartnerDabDevice extends DabDeviceInterface {
      *    logArchive?: string;
      *    remainingChunks?: number;
      * }
+     * To send the archive in chunks, return an array or an async iterable of responses. Each one
+     * is published in order as its own response to the request. Count remainingChunks down to 0
+     * and send the chunks at most 2 seconds apart.
      */
     stopSystemLogCollection = async () => {
         return this.dabResponse(501, "Not implemented.");
