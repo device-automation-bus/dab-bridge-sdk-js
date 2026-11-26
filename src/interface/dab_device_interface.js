@@ -240,6 +240,9 @@ export class DabDeviceInterface {
 
     /**
      * `TelemetryCallback` is an async function which returns generated/collected telemetry.
+     * Its result is published as is, so return a TelemetryMessage:
+     * {timestamp: unix_timestamp_ms, metric: string, value: number},
+     * e.g. {timestamp: Date.now(), metric: "cpu", value: 12.5}
      * @callback TelemetryCallback
      */
 
@@ -366,15 +369,18 @@ export class DabDeviceInterface {
 
     /**
      * @typedef {Object} DeviceInformation
-     * @property {string} make - Manufacturer
+     * @property {string} manufacturer - Device manufacturer
      * @property {string} model - Model name
-     * @property {string} serialNumber - Serial Number
-     * @property {string} year - Production year
+     * @property {string} serialNumber - Serial number
      * @property {string} chipset - Chipset
-     * @property {string} firmware - Firmware version
-     * @property {string} networkConnectivityMode - 'ethernet' | 'wifi' | 'bluetooth'
-     * @property {string} macAddress - MAC Address
-     * @property {string} [identifierForAdvertising] - Advertising identifier when available
+     * @property {string} firmwareVersion - Firmware version
+     * @property {string} firmwareBuild - Firmware build
+     * @property {Array.<Object>} networkInterfaces - NetworkInterface entries, see the DAB spec
+     * @property {string} displayType - 'Built-in' | 'External'
+     * @property {number} screenWidthPixels - Screen width in pixels
+     * @property {number} screenHeightPixels - Screen height in pixels
+     * @property {number} uptimeSince - Boot time, UNIX epoch in milliseconds
+     * @property {string} deviceId - DAB Device ID
      */
 
     /**
@@ -409,7 +415,8 @@ export class DabDeviceInterface {
     }
 
     /**
-     * Launches an application.
+     * Launches an application. Per spec section 3.5, answer 200 only after the
+     * application has launched.
      * @abstract
      * @param {Object} data - request object
      * @param {string} data.appId - application id to launch
@@ -421,14 +428,14 @@ export class DabDeviceInterface {
     }
 
     /**
-     * Exits the application. If the optional force parameter is set and attempt is made
-     * to force stop the application. If the force parameter is omitted or set to false
-     * then the OS may decide which state to put the application into (background,
-     * suspended, quit, etc.).
+     * Exits the application. If the optional background parameter is set, the application
+     * is moved to the BACKGROUND state. If it is omitted or set to false, the application
+     * is stopped and moved to the STOPPED state. Per spec section 3.5, answer 200 only
+     * after the application state has changed.
      * @abstract
      * @param {Object} data - request object
      * @param {string} data.appId - application id to exit
-     * @param {boolean} [data.force] - force exit, default to false
+     * @param {boolean} [data.background] - move to background instead of stopping, default to false
      * @returns {Promise<DabResponse>}
      */
     async exitApp(data) {
@@ -508,7 +515,9 @@ export class DabDeviceInterface {
     }
 
     /**
-     * Sets the device power mode.
+     * Sets the device power mode. Answer only after the device is in the requested mode,
+     * and include the current powerMode in the response. The wire value for deep sleep is
+     * "Deep Sleep", with a space. DAB must stay reachable in every power mode.
      * @abstract
      * @param {Object} data - request object
      * @param {"Active"|"Standby"|"Deep Sleep"} data.powerMode - requested power mode
