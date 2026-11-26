@@ -139,6 +139,10 @@ export class DabBridge {
     addDevice = async (params) => {
         if(!params.ip) return this.dabResponse(400, "IP address of device to add was not included.");
 
+        if(params.dabDeviceId !== undefined && !/^[a-z0-9_-]+$/.test(params.dabDeviceId))
+            return this.dabResponse(400,
+                "Invalid dabDeviceId. Use only lowercase alphanumeric characters, '-' and '_'.");
+
         logger.debug("DeviceMap:", JSON.stringify(this.deviceMap));
 
         if(this.deviceMap.has(params.ip)){
