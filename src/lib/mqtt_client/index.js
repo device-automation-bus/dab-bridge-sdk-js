@@ -51,6 +51,14 @@ export class MqttClient {
     }
 
     /**
+     * Topics registered with handle()
+     * @returns {string[]}
+     */
+    get paths() {
+        return this.#handlers.map(({ path }) => path);
+    }
+
+    /**
      * Publishes a request to a topic and waits for a response or timeout to occur
      * @param  {string} topic
      * @param  {{}} payload

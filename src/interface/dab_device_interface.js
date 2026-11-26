@@ -61,7 +61,7 @@ export class DabDeviceInterface {
         //Pre-Init Handler Registration
         await Promise.all(
             [
-                this.client.handle(`dab/${this.dabDeviceID}/${topics.LIST_SUPPORTED_DAB_OPERATIONS_TOPIC}`, this.listSupportedOperations),
+                this.client.handle(`dab/${this.dabDeviceID}/${topics.LIST_SUPPORTED_DAB_OPERATIONS_TOPIC}`, this.listSupportedOperations.bind(this)),
                 this.client.handle(`dab/${this.dabDeviceID}/${topics.APPLICATIONS_LIST_TOPIC}`, this.listApps),
                 this.client.handle(`dab/${this.dabDeviceID}/${topics.APPLICATIONS_LAUNCH_TOPIC}`, this.launchApp),
                 this.client.handle(`dab/${this.dabDeviceID}/${topics.APPLICATIONS_LAUNCH_WITH_CONTENT_TOPIC}`, this.launchWithContent),
@@ -350,8 +350,18 @@ export class DabDeviceInterface {
     // TO BE IMPLEMENTED FOR DEVICE
     //-----------------------------
 
+    /**
+     * Lists every operation registered in init(), except operations/list itself.
+     * Override it to remove the operations the device does not support.
+     * @returns {Promise<{status: number, operations: string[]}>}
+     */
     async listSupportedOperations() {
-        return {status: 501, error: "Device info not implemented"};
+        const prefix = `dab/${this.dabDeviceID}/`;
+        const operations = this.client.paths
+            .filter((path) => path.startsWith(prefix))
+            .map((path) => path.substring(prefix.length))
+            .filter((operation) => operation !== topics.LIST_SUPPORTED_DAB_OPERATIONS_TOPIC);
+        return {status: 200, operations};
     }
 
     /**
