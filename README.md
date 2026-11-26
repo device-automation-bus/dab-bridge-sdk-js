@@ -120,3 +120,48 @@ mosquitto_pub -t dab/device0/applications/launch -m '{ "appId": "Cobalt" }' -D p
 ```
 mosquitto_pub -t dab/device0/system/settings/list -m '{}' -D publish response-topic "my/response/topic"
 ```
+
+#### List the operations a device supports
+
+```
+mosquitto_pub -t dab/device0/operations/list -m '{}' -D publish response-topic "my/response/topic"
+```
+
+### DAB 2.1 operations
+
+#### Get and set the power mode
+
+```
+mosquitto_pub -t dab/device0/system/power-mode/get -m '{}' -D publish response-topic "my/response/topic"
+mosquitto_pub -t dab/device0/system/power-mode/set -m '{ "powerMode": "Standby" }' -D publish response-topic "my/response/topic"
+```
+
+The power modes are `Active`, `Standby` and `Deep Sleep`.
+
+#### Exit an application to the background
+
+```
+mosquitto_pub -t dab/device0/applications/exit -m '{ "appId": "Cobalt", "background": true }' -D publish response-topic "my/response/topic"
+```
+
+#### Install an application
+
+```
+mosquitto_pub -t dab/device0/applications/install -m '{ "appId": "Cobalt", "url": "https://example.com/cobalt.pkg", "timeout": 60 }' -D publish response-topic "my/response/topic"
+```
+
+#### Search and open content
+
+```
+mosquitto_pub -t dab/device0/content/search -m '{ "searchText": "nature" }' -D publish response-topic "my/response/topic"
+mosquitto_pub -t dab/device0/content/open -m '{ "entryId": "<entry-id>" }' -D publish response-topic "my/response/topic"
+```
+
+#### Collect system logs
+
+```
+mosquitto_pub -t dab/device0/system/logs/start-collection -m '{}' -D publish response-topic "my/response/topic"
+mosquitto_pub -t dab/device0/system/logs/stop-collection -m '{}' -D publish response-topic "my/response/topic"
+```
+
+`stop-collection` answers with several responses on the response topic. Each one carries a `logArchive` chunk and `remainingChunks`, which reaches 0 on the last one.
