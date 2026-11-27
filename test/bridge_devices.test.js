@@ -34,3 +34,14 @@ describe("PartnerDabDevice.discovery()", () => {
         expect(await device.discovery()).toEqual({status: 200, ip: "192.0.2.1", deviceId: "test-device"});
     });
 });
+
+describe("DabBridge.listDevices()", () => {
+    test("returns the ip and Device ID of each onboarded device", async () => {
+        const bridge = new DabBridge("test-bridge");
+        bridge.deviceMap.set("192.0.2.1", {dabDeviceID: "device-1"});
+        expect(await bridge.listDevices({})).toEqual({
+            status: 200,
+            deviceList: [{ip: "192.0.2.1", deviceId: "device-1"}],
+        });
+    });
+});
