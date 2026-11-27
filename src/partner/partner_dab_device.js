@@ -121,6 +121,7 @@ export class PartnerDabDevice extends DabDeviceInterface {
      *    parameters?: string [];
      * }
      * @returns type LaunchApplicationResponse = DabResponse
+     * Answer 200 only after the application has launched (spec section 3.5).
      */
     launchApp = async (data) => {
         return this.dabResponse(501, "Not implemented.");
@@ -161,6 +162,8 @@ export class PartnerDabDevice extends DabDeviceInterface {
      * @returns interface ExitApplicationResponse extends DabResponse {
      *    state: string;
      * }
+     * background true moves the application to BACKGROUND; false or omitted stops it.
+     * Answer 200 only after the application state has changed (spec section 3.5).
      */
     exitApp = async (data) => {
         return this.dabResponse(501, "Not implemented.");
@@ -235,6 +238,9 @@ export class PartnerDabDevice extends DabDeviceInterface {
      * @returns interface SetPowerModeResponse extends DabResponse {
      *    powerMode: "Active" | "Standby" | "Deep Sleep";
      * }
+     * Answer only after the device is in the requested mode, and include the current
+     * powerMode. The wire value is "Deep Sleep", with a space. DAB must stay reachable
+     * in every power mode.
      */
     setPowerMode = async (data) => {
         return this.dabResponse(501, "Not implemented.");
@@ -371,6 +377,7 @@ export class PartnerDabDevice extends DabDeviceInterface {
             // DabDeviceInterface handles firing and reporting device telemetry on its own using startDeviceTelemetryImpl
             // As a partner, you just need to implement this callback function and return data
             // This function will be invoked in regular intervals as per the request duration.
+            // Return a TelemetryMessage, e.g. {timestamp: Date.now(), metric: "cpu", value: 12.5}
             return this.dabResponse(501, "Not implemented.");
         })
     };
@@ -403,6 +410,7 @@ export class PartnerDabDevice extends DabDeviceInterface {
 
             logger.debug("App Telemetry callback received by partner for appId:", appId);
             // This function will be invoked in regular intervals as per the request duration.
+            // Return a TelemetryMessage, e.g. {timestamp: Date.now(), metric: "memory", value: 1024}
             return this.dabResponse(501, "Not implemented.");
         })
     };
@@ -467,16 +475,14 @@ export class PartnerDabDevice extends DabDeviceInterface {
      *    };
      *    timeZone: TimeZone [];
      *    screenSaver: boolean;
-     *    screenSaverTimeout: {
-     *       min: int;
-     *       max: int;
-     *    };
+     *    screenSaverMinTimeout: int; // minimum screensaver timeout in seconds, at most 60
      *    personalizedAds: boolean;
      *    highContrastText: boolean;
      *    identifierForAdvertising: boolean;
      *    textToSpeech: boolean;
      * }
      *
+     * Omit the settings the device does not support instead of reporting false or 0.
      * Please refer to DAB Specification for exact details about field formats.
      */
     listSystemSettings = async () => {
@@ -511,6 +517,8 @@ export class PartnerDabDevice extends DabDeviceInterface {
      * }
      *
      * interface GetCurrentSystemSettingsResponse extends DabResponse, SystemSettings {}
+     *
+     * Omit the settings the device does not support instead of reporting false or 0.
      */
     getSystemSettings = async () => {
         return this.dabResponse(501, "Not implemented.");
@@ -566,6 +574,7 @@ export class PartnerDabDevice extends DabDeviceInterface {
      *    entryId: string;
      * }
      * @returns type OpenContentResponse = DabResponse
+     * Answer 200 only after the content is open, and 404 for an unknown entryId.
      */
     openContent = async (data) => {
         return this.dabResponse(501, "Not implemented.");
