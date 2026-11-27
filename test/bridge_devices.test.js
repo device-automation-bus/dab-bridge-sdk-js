@@ -29,9 +29,8 @@ describe("DabBridge.addDevice() dabDeviceId validation", () => {
 });
 
 describe("PartnerDabDevice.discovery()", () => {
-    test("returns ip and deviceId", async () => {
+    test("returns status, ip and deviceId", async () => {
         const device = new PartnerDabDevice("test-device", "192.0.2.1");
-        // status is checked once dabResponse() keeps it for 2xx results (#20).
-        expect(await device.discovery()).toMatchObject({ip: "192.0.2.1", deviceId: "test-device"});
+        expect(await device.discovery()).toEqual({status: 200, ip: "192.0.2.1", deviceId: "test-device"});
     });
 });
