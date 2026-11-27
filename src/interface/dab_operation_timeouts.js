@@ -1,6 +1,9 @@
 /**
  * Keep the existing default request timeout for normal operations, and only
  * extend timeout for DAB 2.1 operations whose spec latency exceeds the default.
+ * These are client side timeouts, how long Client.request() waits for a
+ * response. They are not the device latency budgets from spec section 3.4,
+ * which are in dab_latency_budgets.js.
  */
 export const DEFAULT_REQUEST_TIMEOUT_MS = 20_000;
 
