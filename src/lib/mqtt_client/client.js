@@ -59,7 +59,7 @@ const logger = getLogger()
  * @class
  * @private
  */
-class Client {
+export class Client {
 
     #client;
     #emitter;
