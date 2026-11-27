@@ -19,6 +19,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { TimeoutError } from './error.js';
 import { convertPattern } from './util.js';
 import { getRequestTimeoutMs } from '../../interface/dab_operation_timeouts.js';
+import { getLatencyBudgetMs } from '../../interface/dab_latency_budgets.js';
 import ee2pkg from 'eventemitter2';
 const { EventEmitter2 } = ee2pkg;
 import {getLogger} from "../util.js";
@@ -305,21 +306,46 @@ export class Client {
         );
       } else {
         const responseTopic = pkg.properties.responseTopic;
+        const startMs = Date.now();
+        // DAB device operation, e.g. applications/list in dab/<deviceId>/applications/list.
+        // Bridge topics and dab/discovery have no latency budget.
+        const operation = /^dab\/(?!bridge\/)[^/]+\/(.+)$/.exec(pkg.topic)?.[1];
+        let budgetChecked = false;
+        // Publishes a response and warns once if the first one missed the spec latency budget.
+        const publishResponse = async (response) => {
+          logger.debug(`Responding on topic ${responseTopic} with message ${JSON.stringify(response)}`);
+          await this.publish(responseTopic, response, {properties: {correlationData: correlationData}});
+          if (operation && !budgetChecked) {
+            budgetChecked = true;
+            const elapsedMs = Date.now() - startMs;
+            const budgetMs = getLatencyBudgetMs(operation, msg);
+            if (elapsedMs > budgetMs) {
+              logger.warn(`${operation} answered in ${elapsedMs} ms, over its ${budgetMs} ms latency budget`);
+            }
+          }
+        };
         try {
           const resultMsg = await handler(
             msg,
             pkg.topic.substring(0, topic.lastIndexOf("/"))
           );
-          logger.debug(`Responding on topic ${responseTopic} with message ${JSON.stringify(resultMsg)}`);
-          return this.publish(responseTopic, resultMsg, {properties: {correlationData: correlationData}});
+          // An array or async iterable is a series of responses to the same
+          // request, e.g. system/logs/stop-collection chunks. Publish each one
+          // in order with the same correlationData.
+          if (Array.isArray(resultMsg) || typeof resultMsg?.[Symbol.asyncIterator] === "function") {
+            for await (const response of resultMsg) {
+              await publishResponse(response);
+            }
+            return;
+          }
+          return publishResponse(resultMsg);
         } catch (error) {
           const status = error.status || 500;
-          return this.publish(responseTopic, {
+          return publishResponse({
             status: status,
             error: JSON.stringify(serializeError(error)),
             request: msg
-          },
-          {properties: {correlationData: correlationData}});
+          });
         }
       }
     });

@@ -174,6 +174,7 @@ export class PartnerDabDevice extends DabDeviceInterface {
      *    timeout?: number;
      * }
      * @returns type InstallApplicationResponse = DabResponse
+     * timeout is in seconds. If the installation takes longer, stop it and answer 408.
      */
     installApp = async (data) => {
         return this.dabResponse(501, "Not implemented.");
@@ -184,6 +185,7 @@ export class PartnerDabDevice extends DabDeviceInterface {
      *    appId: string;
      * }
      * @returns type UninstallApplicationResponse = DabResponse
+     * Answer 403 if the uninstallation fails.
      */
     uninstallApp = async (data) => {
         return this.dabResponse(501, "Not implemented.");
@@ -205,6 +207,7 @@ export class PartnerDabDevice extends DabDeviceInterface {
      *    appStoreId?: string;
      * }
      * @returns type InstallApplicationFromAppStoreResponse = DabResponse
+     * Answer 401 if the app store requires the user to log in.
      */
     installAppFromStore = async (data) => {
         return this.dabResponse(501, "Not implemented.");
@@ -270,6 +273,9 @@ export class PartnerDabDevice extends DabDeviceInterface {
      *    logArchive?: string;
      *    remainingChunks?: number;
      * }
+     * To send the archive in chunks, return an array or an async iterable of responses. Each one
+     * is published in order as its own response to the request. Count remainingChunks down to 0
+     * and send the chunks at most 2 seconds apart.
      */
     stopSystemLogCollection = async () => {
         return this.dabResponse(501, "Not implemented.");
